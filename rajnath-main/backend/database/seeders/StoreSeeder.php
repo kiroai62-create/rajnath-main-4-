@@ -108,7 +108,7 @@ class StoreSeeder extends Seeder
             if (DB::table('products')->where('slug', $slug)->exists()) {
                 continue;
             }
-            $img = 'images/art/store-'.$slug.'.jpg';
+            $img = is_file(public_path('images/store/'.$slug.'.jpg')) ? 'images/store/'.$slug.'.jpg' : 'images/art/store-'.$slug.'.jpg';
             DB::table('products')->insert([
                 'ref' => (string) Str::ulid(), 'slug' => $slug, 'category' => $category, 'name' => $name, 'summary' => $summary,
                 'description' => $summary."\n\nAssociated with: $for. "

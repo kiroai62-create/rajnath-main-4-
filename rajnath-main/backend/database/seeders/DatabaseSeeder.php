@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
         $this->call(CatalogueRevisionSeeder::class);
         $this->call(RichContentSeeder::class);
         $this->call(StoreLaunchSeeder::class);
+        $this->call(StoreImagesSeeder::class);
         $this->call(OfficeHoursSeeder::class);
         $this->call(GoogleReviewsSeeder::class);
         $this->call(GalleryImportSeeder::class);

@@ -9,6 +9,7 @@ use App\Domain\Payments\Coupons;
 use App\Domain\Payments\Razorpay;
 use App\Domain\Payments\ServiceDetails;
 use App\Domain\Practitioners\Practitioners;
+use App\Domain\Store\ProductGuide;
 use App\Domain\Store\Store;
 use App\Http\Controllers\Controller;
 use App\Models\BirthProfile;
@@ -263,7 +264,19 @@ class CommerceController extends Controller
     {
         return ['ref' => $p->ref, 'slug' => $p->slug, 'name' => $p->name, 'category' => $p->category, 'summary' => $p->summary, 'description' => $p->description,
             'weight' => $p->weight, 'origin' => $p->origin, 'certification' => $p->certification, 'price_minor' => (int) $p->price_minor,
-            'in_stock' => $p->stock > 0, 'max_per_order' => min((int) $p->max_per_order, max(1, (int) $p->stock)), 'image_url' => $p->image_path ? url('/'.ltrim($p->image_path, '/')) : null];
+            'in_stock' => $p->stock > 0, 'max_per_order' => min((int) $p->max_per_order, max(1, (int) $p->stock)), 'image_url' => $p->image_path ? url('/'.ltrim($p->image_path, '/')) : null,
+            'thumb_url' => self::thumbUrl($p->image_path)];
+    }
+
+    /** Square 400 px copy next to the photo (images/store/x-thumb.jpg) when it exists, else the photo. */
+    private static function thumbUrl(?string $path): ?string
+    {
+        if (! $path) {
+            return null;
+        }
+        $thumb = preg_replace('/(\.\w+)$/', '-thumb$1', ltrim($path, '/'));
+
+        return url('/'.(is_file(public_path($thumb)) ? $thumb : ltrim($path, '/')));
     }
 
     public function products(Request $request): JsonResponse
@@ -276,7 +289,8 @@ class CommerceController extends Controller
     {
         $p = DB::table('products')->where('slug', $slug)->where('active', true)->first();
 
-        return $p ? response()->json(['data' => self::productToApi($p)]) : AuthController::error('not_found', 'Item not found.', 404);
+        // The full product page: benefits, how to wear, cautions, specifications and FAQs.
+        return $p ? response()->json(['data' => self::productToApi($p) + ['guide' => ProductGuide::for($p)]]) : AuthController::error('not_found', 'Item not found.', 404);
     }
 
     public function practitioners(Request $request): JsonResponse
