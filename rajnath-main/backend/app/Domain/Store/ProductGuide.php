@@ -89,13 +89,83 @@ class ProductGuide
             default => [],
         };
 
+        $own = self::saved($p);
+
         return [
             'category_label' => self::CATEGORY_LABELS[$p->category] ?? ucfirst((string) $p->category),
-            'highlights' => self::highlights($p),
-            'sections' => $sections,
-            'faqs' => self::faqs($p),
+            'highlights' => $own['highlights'] ?? self::highlights($p),
+            'sections' => $own['sections'] ?? $sections,
+            'faqs' => $own['faqs'] ?? self::faqs($p),
             'specs' => self::specs($p),
             'credit' => self::credit($p),
+        ];
+    }
+
+    /**
+     * Content the owner saved in Admin › Gem store (products.details), each part optional.
+     *
+     * @return array{highlights?: list<string>, sections?: list<array{title: string, kind: string, items: list<mixed>}>, faqs?: list<array{q: string, a: string}>}
+     */
+    public static function saved(object $p): array
+    {
+        $d = isset($p->details) && is_string($p->details) ? json_decode($p->details, true) : null;
+        if (! is_array($d)) {
+            return [];
+        }
+
+        return array_filter([
+            'highlights' => ! empty($d['highlights']) ? array_values(array_map('strval', (array) $d['highlights'])) : null,
+            'sections' => ! empty($d['sections']) ? array_values((array) $d['sections']) : null,
+            'faqs' => ! empty($d['faqs']) ? array_values((array) $d['faqs']) : null,
+        ]);
+    }
+
+    /**
+     * Turns the admin form (or an AI draft) into the stored shape, dropping empty lines and
+     * anything that is not plain text. Table rows are written "Label: value".
+     *
+     * @param  array{highlights?: string, sections?: array<int, array{title?: string, kind?: string, items?: string}>, faqs?: string}  $form
+     * @return array{highlights: list<string>, sections: list<array{title: string, kind: string, items: list<mixed>}>, faqs: list<array{q: string, a: string}>}
+     */
+    public static function fromForm(array $form): array
+    {
+        $lines = fn (?string $t) => array_values(array_filter(array_map(fn ($l) => trim((string) preg_replace('/^[\s\-•*✦]+/u', '', strip_tags($l))), preg_split('/\R/', (string) $t)), fn ($l) => $l !== ''));
+        $sections = [];
+        foreach ((array) ($form['sections'] ?? []) as $sec) {
+            $title = trim(strip_tags((string) ($sec['title'] ?? '')));
+            $kind = ($sec['kind'] ?? 'list') === 'table' ? 'table' : 'list';
+            $items = $lines($sec['items'] ?? '');
+            if ($title === '' || $items === []) {
+                continue;
+            }
+            if ($kind === 'table') {
+                $items = array_map(fn ($l) => str_contains($l, ':') ? array_map('trim', explode(':', $l, 2)) : ['', $l], $items);
+            }
+            $sections[] = ['title' => mb_substr($title, 0, 80), 'kind' => $kind, 'items' => array_slice($items, 0, 20)];
+        }
+        $faqs = [];
+        foreach (preg_split('/\R\s*\R/', trim((string) ($form['faqs'] ?? ''))) as $block) {
+            if (preg_match('/^\s*Q:\s*(.+?)\R\s*A:\s*(.+)$/su', strip_tags($block), $m)) {
+                $faqs[] = ['q' => trim($m[1]), 'a' => trim(preg_replace('/\s+/', ' ', $m[2]))];
+            }
+        }
+
+        return ['highlights' => array_slice($lines($form['highlights'] ?? ''), 0, 8), 'sections' => array_slice($sections, 0, 10), 'faqs' => array_slice($faqs, 0, 12)];
+    }
+
+    /**
+     * The guide written back as form text, for the admin editor.
+     *
+     * @param  array{highlights: list<string>, sections: list<array{title: string, kind: string, items: list<mixed>}>, faqs: list<array{q: string, a: string}>}  $g
+     * @return array{highlights: string, sections: list<array{title: string, kind: string, items: string}>, faqs: string}
+     */
+    public static function toForm(array $g): array
+    {
+        return [
+            'highlights' => implode("\n", $g['highlights']),
+            'sections' => array_map(fn ($s) => ['title' => $s['title'], 'kind' => $s['kind'],
+                'items' => implode("\n", array_map(fn ($i) => is_array($i) ? trim(($i[0] !== '' ? $i[0].': ' : '').$i[1]) : (string) $i, $s['items']))], $g['sections']),
+            'faqs' => implode("\n\n", array_map(fn ($f) => 'Q: '.$f['q']."\nA: ".$f['a'], $g['faqs'])),
         ];
     }
 

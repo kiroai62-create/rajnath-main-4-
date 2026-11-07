@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Domain\Store\ProductGuide;
+use App\Domain\Store\ProductWriter;
 use App\Domain\Store\Shiprocket;
 use App\Domain\Store\Store;
 use App\Http\Controllers\Controller;
@@ -15,6 +17,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use Throwable;
 
 class StoreAdminController extends Controller
 {
@@ -47,6 +50,10 @@ class StoreAdminController extends Controller
             'image' => ['nullable', 'file', 'max:8192'],
             'ship_weight_g' => ['nullable', 'integer', 'min:10', 'max:30000'], 'ship_length_cm' => ['nullable', 'integer', 'min:1', 'max:150'],
             'ship_breadth_cm' => ['nullable', 'integer', 'min:1', 'max:150'], 'ship_height_cm' => ['nullable', 'integer', 'min:1', 'max:150'],
+            'highlights' => ['nullable', 'string', 'max:2000'], 'faqs' => ['nullable', 'string', 'max:12000'],
+            'sections' => ['nullable', 'array', 'max:12'], 'sections.*.title' => ['nullable', 'string', 'max:80'],
+            'sections.*.kind' => ['nullable', Rule::in(['list', 'table'])], 'sections.*.items' => ['nullable', 'string', 'max:5000'],
+            'details_reset' => ['nullable', 'boolean'],
         ]);
         try {
             $price = Money::parseRupees($d['price']);
@@ -69,6 +76,9 @@ class StoreAdminController extends Controller
             'stock' => $d['stock'], 'max_per_order' => $d['max_per_order'], 'active' => (bool) ($d['active'] ?? false), 'sort' => (int) ($d['sort'] ?? 0), 'updated_at' => now(),
             'ship_weight_g' => (int) ($d['ship_weight_g'] ?? $p->ship_weight_g ?? 200), 'ship_length_cm' => (int) ($d['ship_length_cm'] ?? $p->ship_length_cm ?? 12),
             'ship_breadth_cm' => (int) ($d['ship_breadth_cm'] ?? $p->ship_breadth_cm ?? 10), 'ship_height_cm' => (int) ($d['ship_height_cm'] ?? $p->ship_height_cm ?? 6)];
+        $details = ProductGuide::fromForm($d);
+        $row['details'] = ($d['details_reset'] ?? false) || ($details['highlights'] === [] && $details['sections'] === [] && $details['faqs'] === [])
+            ? null : json_encode($details, JSON_UNESCAPED_UNICODE);
         if ($request->hasFile('image')) {
             $row['image_path'] = 'uploads/'.SafeImage::storeForWeb($request->file('image'), 'uploads', 'products', 'image')['path'];
         }
@@ -81,6 +91,31 @@ class StoreAdminController extends Controller
         $audit->record('store.product_saved', null, ['product' => $slug, 'price_minor' => $price, 'stock' => $d['stock'], 'active' => $row['active']]);
 
         return redirect()->route('admin.store.products')->with('status', 'Product saved.');
+    }
+
+    /**
+     * "Enhance with AI": fills the edit form with an AI draft (summary, description, page sections, FAQs).
+     * Nothing is saved; the staff member reviews the draft and presses Save.
+     */
+    public function enhance(Request $request, string $ref, ProductWriter $writer, AuditLogger $audit): RedirectResponse
+    {
+        $this->authorize('catalogue.manage');
+        $p = DB::table('products')->where('ref', $ref)->first();
+        abort_unless($p, 404);
+        $instructions = (string) ($request->validate(['instructions' => ['nullable', 'string', 'max:600']])['instructions'] ?? '');
+        try {
+            $draft = $writer->enhance($p, $instructions);
+        } catch (Throwable $e) {
+            report($e);
+
+            return back()->withErrors(['ai' => mb_substr($e->getMessage(), 0, 300)]);
+        }
+        $audit->record('store.product_ai_draft', null, ['product' => $p->slug]);
+        $form = ProductGuide::toForm($draft);
+
+        return redirect()->route('admin.store.edit', $p->ref)->withInput(['summary' => $draft['summary'], 'description' => $draft['description'],
+            'highlights' => $form['highlights'], 'sections' => $form['sections'], 'faqs' => $form['faqs'], 'instructions' => $instructions])
+            ->with('status', 'AI draft ready. Check every line, change what you like, then press Save product. Nothing is live yet.');
     }
 
     public function orders(Request $request): View

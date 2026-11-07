@@ -237,6 +237,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'staff'])->group(fun
     Route::get('store/products/{ref}', [Admin\StoreAdminController::class, 'edit'])->name('store.edit');
     Route::post('store/products', [Admin\StoreAdminController::class, 'save'])->name('store.create');
     Route::post('store/products/{ref}', [Admin\StoreAdminController::class, 'save'])->name('store.update');
+    Route::post('store/products/{ref}/ai', [Admin\StoreAdminController::class, 'enhance'])->middleware('throttle:provider-test')->name('store.ai');
     Route::get('store/orders', [Admin\StoreAdminController::class, 'orders'])->name('store.orders');
     Route::get('store/orders/{ref}', [Admin\StoreAdminController::class, 'order'])->name('store.order');
     Route::put('store/orders/{ref}/shipment', [Admin\StoreAdminController::class, 'updateShipment'])->name('store.shipment');

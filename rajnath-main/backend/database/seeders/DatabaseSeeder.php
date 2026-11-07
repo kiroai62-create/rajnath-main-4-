@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
         $this->call(MarketPriceSeeder::class);
         $this->call(HindiCatalogueSeeder::class);
         $this->call(ShowcaseSeeder::class);
+        $this->call(ProfileStatsSeeder::class);
         $this->call(LegalSeeder::class);
         $this->call(ServiceContentSeeder::class);
         $this->call(BlogSeeder::class);

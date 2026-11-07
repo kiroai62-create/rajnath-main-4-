@@ -2,16 +2,20 @@
 
 namespace Tests\Feature\Store;
 
+use App\Support\Settings\SettingsRepository;
 use Database\Seeders\StoreImagesSeeder;
 use Database\Seeders\StoreSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Spatie\Permission\PermissionRegistrar;
+use Tests\Concerns\StaffHelpers;
 use Tests\TestCase;
 
 /** Real product photos and the full e-commerce product page (web + app API). */
 class ProductPageTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, StaffHelpers;
 
     protected function setUp(): void
     {
@@ -55,5 +59,62 @@ class ProductPageTest extends TestCase
         $list = $this->getJson('/api/v1/store/products')->assertOk()->json('data');
         $this->assertGreaterThan(50, count($list));
         $this->assertArrayNotHasKey('guide', $list[0]);
+    }
+
+    private function payload(object $p, array $extra = []): array
+    {
+        return ['name' => $p->name, 'category' => $p->category, 'summary' => $p->summary, 'price' => (string) ($p->price_minor / 100), 'stock' => 5, 'max_per_order' => 1, 'active' => '1'] + $extra;
+    }
+
+    public function test_owner_edits_page_details_and_can_go_back_to_built_in_text(): void
+    {
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+        $this->syncRbac();
+        $owner = $this->makeStaff(['owner']);
+        $p = DB::table('products')->where('slug', 'ruby-manik')->first();
+        $this->asStaff($owner)->get(route('admin.store.edit', $p->ref))->assertOk()->assertSee('Product page details')->assertSee('Enhance with AI')->assertSee('Ring finger, right hand');
+
+        $this->asStaff($owner)->post(route('admin.store.update', $p->ref), $this->payload($p, [
+            'highlights' => "Hand-picked by Acharya Ji\n- Unheated",
+            'sections' => [['title' => 'Benefits', 'kind' => 'list', 'items' => "Leadership\nसम्मान"], ['title' => 'How to wear', 'kind' => 'table', 'items' => 'Finger: Ring finger'], ['title' => '', 'items' => 'dropped']],
+            'faqs' => "Q: Is it heated?\nA: No, it is unheated.",
+        ]))->assertSessionHasNoErrors();
+        $this->get(route('store.show', 'ruby-manik'))->assertOk()->assertSee('Hand-picked by Acharya Ji')->assertSee('सम्मान')->assertSee('Is it heated?')->assertDontSee('Who should wear it');
+        $g = $this->getJson('/api/v1/store/products/ruby-manik')->json('data.guide');
+        $this->assertSame(['Hand-picked by Acharya Ji', 'Unheated'], $g['highlights']);
+        $this->assertSame([['Finger', 'Ring finger']], $g['sections'][1]['items']);
+
+        $this->asStaff($owner)->post(route('admin.store.update', $p->ref), $this->payload($p, ['details_reset' => '1']))->assertSessionHasNoErrors();
+        $this->get(route('store.show', 'ruby-manik'))->assertSee('Who should wear it');
+    }
+
+    public function test_ai_writes_a_draft_into_the_form_without_saving(): void
+    {
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+        $this->syncRbac();
+        $s = app(SettingsRepository::class);
+        foreach (['ai.enabled' => true, 'ai.order' => 'groq', 'ai.groq.enabled' => true] as $k => $v) {
+            $s->set($k, $v);
+        }
+        $s->set('ai.groq.key', 'k', secret: true);
+        $sent = [];
+        Http::fake(['api.groq.com/*' => function ($req) use (&$sent) {
+            $sent[] = $req->data();
+
+            return Http::response(['choices' => [['finish_reason' => 'stop', 'message' => ['role' => 'assistant', 'content' => json_encode([
+                'summary' => 'Natural ruby for a strong Sun.', 'description' => 'Para one.\n\nPara two.', 'highlights' => ['Certified', 'Energised'],
+                'sections' => [['title' => 'Benefits', 'kind' => 'list', 'items' => ['Confidence']], ['title' => 'How to wear', 'kind' => 'table', 'items' => [['Metal', 'Gold']]]],
+                'faqs' => [['q' => 'Who can wear ruby?', 'a' => 'After a chart check.']],
+            ])]]]]);
+        }]);
+        $owner = $this->makeStaff(['owner']);
+        $p = DB::table('products')->where('slug', 'ruby-manik')->first();
+        $this->asStaff($owner)->post(route('admin.store.ai', $p->ref), ['instructions' => 'Keep it short'])->assertRedirect(route('admin.store.edit', $p->ref))
+            ->assertSessionHasInput('summary', 'Natural ruby for a strong Sun.')->assertSessionHasInput('faqs', "Q: Who can wear ruby?\nA: After a chart check.");
+        $this->assertStringContainsString('Keep it short', $sent[0]['messages'][1]['content']);
+        $this->assertNull(DB::table('products')->where('id', $p->id)->value('details'), 'draft is not saved');
+
+        $s->set('ai.enabled', false);
+        $this->asStaff($owner)->post(route('admin.store.ai', $p->ref))->assertSessionHasErrors('ai');
     }
 }
