@@ -153,15 +153,17 @@ class IntegrationsController extends Controller
             return back()->withErrors(['provider' => AiProviders::PROVIDERS[$p]['label'].' needs an API key and a model first.']);
         }
         try {
-            [$text, , , $ms] = $ai->call($p, [['role' => 'user', 'content' => 'Reply with the single word OK.']], 20);
+            // Reasoning models (e.g. openai/gpt-oss-120b on Groq) spend tokens thinking first, so the limit must leave room for the answer.
+            [$text, , , $ms] = $ai->call($p, [['role' => 'user', 'content' => 'Reply with the single word OK.']], 300);
             $this->audit->record('providers.ai_test', null, ['provider' => $p, 'result' => 'ok']);
             AiHealth::ok();
 
-            return back()->with('status', AiProviders::PROVIDERS[$p]['label']." answered in {$ms} ms: “".mb_substr($text, 0, 40).'”');
+            return back()->with('status', AiProviders::PROVIDERS[$p]['label'].' ('.$ai->model($p).") answered in {$ms} ms: “".mb_substr($text, 0, 40).'”');
         } catch (Throwable $e) {
+            report($e);
             $this->audit->record('providers.ai_test', null, ['provider' => $p, 'result' => 'failed']);
 
-            return back()->withErrors(['provider' => mb_substr($e->getMessage(), 0, 300)]);
+            return back()->withErrors(['provider' => mb_substr($e->getMessage(), 0, 300).' — model: '.$ai->model($p)]);
         }
     }
 
