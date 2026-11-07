@@ -10,6 +10,7 @@ abstract final class ArjColors {
   static const ink800 = Color(0xFF261B5E);
   static const ink700 = Color(0xFF362777);
   static const ink600 = Color(0xFF4E4384);
+  static const ink400 = Color(0xFF8F88B9);
   static const ink200 = Color(0xFFDCD8EC);
   static const ink100 = Color(0xFFEEECF6);
   static const gold50 = Color(0xFFFDF6E3);
@@ -18,7 +19,10 @@ abstract final class ArjColors {
   static const gold400 = Color(0xFFEDB63E);
   static const gold500 = Color(0xFFE0A526);
   static const gold700 = Color(0xFF8A5A0C);
+  static const saffron400 = Color(0xFFF7A23E);
   static const saffron500 = Color(0xFFEE8420);
+  static const saffron600 = Color(0xFFD4661A);
+  static const maroon500 = Color(0xFFB02A55);
   static const maroon600 = Color(0xFF9B2348);
   static const maroon700 = Color(0xFF7A1838);
   static const danger700 = Color(0xFFA12A2A);
@@ -27,7 +31,8 @@ abstract final class ArjColors {
 
 /// Shared decoration values so custom surfaces match the themed ones.
 abstract final class ArjStyle {
-  static const radiusCard = 18.0;
+  /// Same as the website's --radius-card (1.25rem).
+  static const radiusCard = 20.0;
   static const radiusControl = 14.0;
 
   /// Soft, low-contrast ink shadow used under cards and raised surfaces.
@@ -51,6 +56,20 @@ abstract final class ArjStyle {
     colors: [ArjColors.ink950, ArjColors.ink900, Color(0xFF2A1650), ArjColors.maroon700],
     stops: [0, 0.45, 0.8, 1],
   );
+
+  /// Base of the website's .bg-cosmic (linear 160°), used under the radial glows.
+  static const cosmicLinear = LinearGradient(
+    begin: Alignment(-0.35, -1),
+    end: Alignment(0.35, 1),
+    colors: [ArjColors.ink950, ArjColors.ink900, Color(0xFF2A1650)],
+    stops: [0, 0.45, 1],
+  );
+
+  /// The website's .btn-primary: indigo into maroon.
+  static const primaryGradient = LinearGradient(colors: [ArjColors.ink900, ArjColors.ink800, ArjColors.maroon700]);
+
+  /// The website's --shadow-glow under highlighted cards.
+  static const glowShadow = [BoxShadow(color: Color(0x8CE0A526), blurRadius: 40, spreadRadius: -18, offset: Offset(0, 18))];
 
   /// Temple gold into saffron (the website's .btn-gold).
   static const goldGradient = LinearGradient(
@@ -83,7 +102,8 @@ ThemeData buildArjTheme() {
     error: ArjColors.danger700,
   );
 
-  final base = ThemeData(useMaterial3: true, colorScheme: scheme);
+  // Inter + Noto Sans Devanagari, the website's fonts (bundled in assets/fonts).
+  final base = ThemeData(useMaterial3: true, colorScheme: scheme, fontFamily: 'Inter', fontFamilyFallback: const ['NotoSansDevanagari']);
   final t = base.textTheme.apply(bodyColor: ArjColors.ink900, displayColor: ArjColors.ink900);
   final text = t.copyWith(
     displaySmall: t.displaySmall?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.8, height: 1.15),
@@ -102,7 +122,8 @@ ThemeData buildArjTheme() {
   );
 
   const buttonText = TextStyle(fontSize: 15, fontWeight: FontWeight.w600, letterSpacing: 0.2);
-  const buttonShape = RoundedRectangleBorder(borderRadius: control);
+  // Pill buttons, like the website's rounded-full .btn.
+  const buttonShape = StadiumBorder();
   const buttonPadding = EdgeInsets.symmetric(horizontal: 22, vertical: 14);
 
   return base.copyWith(
@@ -113,7 +134,7 @@ ThemeData buildArjTheme() {
     splashFactory: InkSparkle.splashFactory,
     visualDensity: VisualDensity.standard,
     appBarTheme: AppBarTheme(
-      backgroundColor: ArjColors.ivory50,
+      backgroundColor: Colors.white,
       foregroundColor: ArjColors.ink900,
       surfaceTintColor: Colors.transparent,
       elevation: 0,

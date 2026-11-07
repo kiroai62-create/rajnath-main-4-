@@ -1,6 +1,10 @@
+export 'brand.dart';
+
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
+
+import 'brand.dart';
 
 import '../api/api_client.dart';
 import '../theme/app_theme.dart';
@@ -110,25 +114,32 @@ class StatePanel extends StatelessWidget {
   }
 }
 
+/// Section heading like the website's: optional gold eyebrow above a bold title.
 class SectionTitle extends StatelessWidget {
-  const SectionTitle(this.text, {super.key});
+  const SectionTitle(this.text, {super.key, this.eyebrow});
   final String text;
+  final String? eyebrow;
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(4, 24, 4, 10),
-        child: Row(children: [
-          Container(
-            width: 4,
-            height: 18,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(2),
-              gradient: const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [ArjColors.gold400, ArjColors.gold700]),
+        padding: const EdgeInsets.fromLTRB(4, 26, 4, 12),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          if (eyebrow != null) ...[Eyebrow(eyebrow!), const SizedBox(height: 6)],
+          Row(children: [
+            if (eyebrow == null) ...[
+              Container(
+                width: 4,
+                height: 20,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(2),
+                  gradient: const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [ArjColors.gold300, ArjColors.saffron500]),
+                ),
+              ),
+              const SizedBox(width: 10),
+            ],
+            Expanded(
+              child: Text(text, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 19, fontWeight: FontWeight.w700, letterSpacing: -0.3)),
             ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(text, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: -0.2)),
-          ),
+          ]),
         ]),
       );
 }

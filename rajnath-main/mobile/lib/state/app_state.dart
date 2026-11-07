@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../api/api_client.dart';
+import '../util/version.dart';
 
 /// App-wide session state. Signed-in user is loaded from /me using the stored token.
 class AppState extends ChangeNotifier {
@@ -25,7 +26,45 @@ class AppState extends ChangeNotifier {
   /// Runs before the bearer token is revoked on sign-out (e.g. DELETE /push-tokens).
   Future<void> Function()? beforeSignOut;
 
-  bool get assistantEnabled => (meta?['assistant'] as Map?)?['enabled'] != false;
+  bool get assistantEnabled => (meta?['assistant'] as Map?)?['enabled'] != false && featureOn('assistant');
+
+  // ---- Admin › Mobile app (GET /meta → app). Missing values keep everything on. ----
+
+  Map get _app => (meta?['app'] as Map?) ?? const {};
+
+  /// Feature switched on by the owner (assistant, store, puja, palm, consultation, wallet, blog, gallery).
+  bool featureOn(String key) => ((_app['features'] as Map?) ?? const {})[key] != false;
+
+  /// Maintenance message when the owner has put the app into maintenance, else null.
+  String? get maintenanceMessage {
+    final m = _app['maintenance'];
+    return m is Map && m['on'] == true ? '${m['message'] ?? 'The app is being updated. Please try again soon.'}' : null;
+  }
+
+  Map get updateInfo => (_app['update'] as Map?) ?? const {};
+
+  /// This build is older than the minimum version: the user must update.
+  bool get updateRequired => compareVersions(appVersion, '${updateInfo['min_version'] ?? meta?['min_app_version'] ?? '0'}') < 0;
+
+  /// A newer version exists (shown as a dismissible note).
+  bool get updateAvailable => !updateRequired && compareVersions(appVersion, '${updateInfo['latest_version'] ?? '0'}') < 0;
+
+  /// Announcement banner `{text, cta, link, style}` or null.
+  Map? get announcement => _app['announcement'] is Map ? _app['announcement'] as Map : null;
+
+  /// Home section keys in the owner's order, without hidden ones. Unknown keys are ignored by the app.
+  List<String> homeSections(List<String> defaults) {
+    final home = (_app['home'] as Map?) ?? const {};
+    final hidden = ((home['hidden'] as List?) ?? const []).map((e) => '$e').toSet();
+    final order = ((home['order'] as List?) ?? const []).map((e) => '$e').where(defaults.contains).toList();
+    for (var i = 0; i < defaults.length; i++) {
+      if (!order.contains(defaults[i])) order.insert(i.clamp(0, order.length), defaults[i]);
+    }
+    return order.where((k) => !hidden.contains(k)).toList();
+  }
+
+  /// Support numbers for app users (Admin › Mobile app), each may be null.
+  Map get support => (_app['support'] as Map?) ?? const {};
 
   bool get signedIn => user != null;
 
@@ -62,6 +101,8 @@ class AppState extends ChangeNotifier {
     ready = true;
     notifyListeners();
     if (signedIn) unawaited(refreshUnread());
+    // Admin › Mobile app settings (maintenance, update, banner, sections) apply as soon as they arrive.
+    if (meta == null) unawaited(loadMeta());
   }
 
   Future<Map<String, dynamic>?> loadMeta() async {
