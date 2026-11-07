@@ -36,7 +36,7 @@ class _AsyncViewState<T> extends State<AsyncView<T>> {
         }
         if (s.hasError) {
           final e = s.error;
-          return ErrorPanel(message: e is ApiException ? e.message : 'Something went wrong.', onRetry: _reload, offline: e is ApiException && e.isOffline);
+          return ErrorPanel(message: e is ApiException ? e.message : 'Something went wrong.', onRetry: _reload, offline: e is ApiException && e.isOffline, code: e is ApiException ? e.code : null);
         }
         final data = s.data as T;
         if (widget.isEmpty?.call(data) ?? false) {
@@ -49,16 +49,19 @@ class _AsyncViewState<T> extends State<AsyncView<T>> {
 }
 
 class ErrorPanel extends StatelessWidget {
-  const ErrorPanel({super.key, required this.message, required this.onRetry, this.offline = false});
+  const ErrorPanel({super.key, required this.message, required this.onRetry, this.offline = false, this.code});
   final String message;
   final VoidCallback onRetry;
+
+  /// True only when the phone really has no internet (see [ApiClient.classify]).
   final bool offline;
+  final String? code;
 
   @override
   Widget build(BuildContext context) => StatePanel(
-        icon: offline ? Icons.wifi_off_rounded : Icons.error_outline_rounded,
+        icon: offline ? Icons.wifi_off_rounded : (code == 'server_unreachable' || code == 'timeout' ? Icons.cloud_off_rounded : Icons.error_outline_rounded),
         iconColor: ArjColors.danger700,
-        title: offline ? 'You are offline' : null,
+        title: offline ? 'You are offline' : (code == 'server_unreachable' ? 'Server not reachable' : (code == 'timeout' ? 'Taking longer than usual' : null)),
         message: message,
         action: OutlinedButton.icon(onPressed: onRetry, icon: const Icon(Icons.refresh_rounded, size: 18), label: const Text('Try again')),
       );

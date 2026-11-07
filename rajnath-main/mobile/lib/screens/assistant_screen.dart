@@ -86,10 +86,11 @@ class _AssistantScreenState extends State<AssistantScreen> {
     });
     _toEnd();
     try {
+      // The AI may look things up (panchang, prices, web search) before answering, so wait up to 90 s.
       final r = await widget.state.api.post('/assistant/chat', {
         'message': text,
         if (_conversation != null) 'conversation': _conversation,
-      });
+      }, timeout: const Duration(seconds: 90));
       setState(() {
         _conversation = r['conversation'] as String? ?? _conversation;
         _disclaimer = r['disclaimer'] as String? ?? _disclaimer;
@@ -108,10 +109,13 @@ class _AssistantScreenState extends State<AssistantScreen> {
       });
     } on ApiException catch (e) {
       setState(() {
-        if (e.status == 429) {
+        if (e.status == 429 && e.code == 'daily_limit') {
           _blocked = true;
           _handoff = true;
           _notice = "You've reached today's limit for the assistant. Please try again tomorrow, or talk to our team.";
+        } else if (e.status == 429) {
+          // Per-minute limit only: the customer can ask again shortly.
+          _notice = 'You are sending messages quickly. Please wait a minute and ask again.';
         } else if (e.status == 503 || e.code == 'assistant_unavailable') {
           _handoff = true;
           _notice = 'Just a moment, please. The assistant is busy right now; try again in a minute or talk to our team.';

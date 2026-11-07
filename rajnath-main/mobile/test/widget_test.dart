@@ -50,11 +50,21 @@ void main() {
     await state.bootstrap();
     expect(state.signedIn, false);
     expect(s.data.containsKey('arj_token'), false);
+    api.hasInternet = () async => false;
     try {
       await api.get('/nowhere');
       fail('expected error');
     } on ApiException catch (e) {
       expect(e.isOffline, true);
+    }
+    // Internet works but our server does not answer: never claim the phone is offline.
+    api.hasInternet = () async => true;
+    try {
+      await api.get('/nowhere');
+      fail('expected error');
+    } on ApiException catch (e) {
+      expect(e.isOffline, false);
+      expect(e.code, 'server_unreachable');
     }
   });
 
