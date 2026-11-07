@@ -1,0 +1,97 @@
+<x-layouts.admin :title="$o->exists ? ($t?->title ?? 'Service') : 'New service'">
+    <div class="grid gap-6 2xl:grid-cols-[1fr_28rem]">
+        <div class="min-w-0 space-y-6">
+        <form method="POST" action="{{ $o->exists ? route('admin.catalogue.update', $o->ref) : route('admin.catalogue.store') }}" enctype="multipart/form-data" class="card min-w-0 space-y-5 p-5 sm:p-6">
+            @csrf @if ($o->exists) @method('PUT') @endif
+            <h2 class="text-lg">Details (English)</h2>
+            <div class="grid gap-5 sm:grid-cols-2">
+                <x-select name="family_id" label="Family" :value="$o->family_id" :options="$families->pluck('name', 'id')->all()" />
+                <x-field name="slug" label="Web address" :value="$o->slug" hint="Lowercase words with dashes. Leave empty to create from the title." />
+                <div class="sm:col-span-2"><x-field name="title" label="Title" :value="$t?->title" required /></div>
+                <div class="sm:col-span-2"><x-field name="summary" label="Short summary" :value="$t?->summary" required maxlength="300" /></div>
+            </div>
+            @foreach ([['body', 'Description (blank line between paragraphs)', $t?->body, 6], ['includes', "What's included (one item per line)", implode("\n", $t?->includes ?? []), 5], ['audience', 'Who it is for (one per line)', implode("\n", $t?->audience ?? []), 3], ['process', 'How it is done — steps (one per line)', implode("\n", $t?->process ?? []), 5], ['benefits', 'Benefits (one per line)', implode("\n", $t?->benefits ?? []), 4], ['faqs', 'Questions and answers (one per line: Question? | Answer)', \App\Http\Controllers\Admin\CatalogueController::faqText($t?->faqs), 5], ['exclusions', 'Not included', $t?->exclusions, 2], ['disclaimer', 'Disclaimer shown to customers', $t?->disclaimer, 2]] as [$n, $l, $v, $rows])
+                <div><label for="f-{{ $n }}" class="field-label">{{ $l }}</label><textarea id="f-{{ $n }}" name="{{ $n }}" rows="{{ $rows }}" class="input">{{ old($n, $v) }}</textarea>@error($n)<p class="field-error">{{ $message }}</p>@enderror</div>
+            @endforeach
+            <div class="grid gap-5 sm:grid-cols-3">
+                <div class="sm:col-span-2">
+                    <label for="f-image" class="field-label">Photo (JPG/PNG/WebP, at least 400×400; resized automatically)</label>
+                    <input id="f-image" name="image" type="file" accept="image/jpeg,image/png,image/webp" class="input">
+                    @error('image')<p class="field-error">{{ $message }}</p>@enderror
+                    @if ($o->image_path)<img src="/{{ $o->image_path }}" alt="" class="mt-3 h-28 rounded-xl object-cover">@endif
+                    <details class="mt-2 text-sm"><summary class="cursor-pointer text-ink-600">Or use a photo already on the server</summary>
+                        <div class="mt-2"><x-field name="image_path" label="Image path" :value="$o->image_path" hint="e.g. images/owner/portrait-navy-480.jpg. Leave as is to keep the current photo." /></div></details>
+                </div>
+                <x-field name="sort" label="Order" type="number" :value="$o->sort" min="0" />
+            </div>
+            <label class="flex min-h-11 items-center gap-3 text-sm"><input type="checkbox" name="featured" value="1" class="size-4 accent-ink-900" @checked(old('featured', $o->featured))> Feature on the home page</label>
+            @can('catalogue.manage')<button class="btn-primary">{{ $o->exists ? 'Save details' : 'Create draft' }}</button>@endcan
+        </form>
+        @if ($o->exists && \App\Http\Middleware\SetLocale::multilingual())
+            <form method="POST" action="{{ route('admin.catalogue.translation', [$o->ref, $lang]) }}" class="card min-w-0 space-y-4 p-5 sm:p-6">
+                @csrf @method('PUT')
+                <div class="flex flex-wrap items-center justify-between gap-2"><h2 class="text-lg">Other languages</h2>
+                    <nav class="flex flex-wrap gap-1" aria-label="Language">@foreach ($langs as $code => $name)<a href="{{ route('admin.catalogue.edit', [$o->ref, 'locale' => $code]) }}" @class(['btn px-3 text-sm', 'bg-ink-900 text-white' => $lang === $code, 'border border-ink-200 bg-white' => $lang !== $code]) lang="{{ $code }}" @if ($lang === $code) aria-current="true" @endif>{{ $name }}@if ($o->translations->firstWhere('locale', $code)?->title) ✓@endif</a>@endforeach</nav></div>
+                <p class="text-xs text-ink-600">Text shown when a visitor chooses {{ $langs[$lang] }}. Fields left empty show the English text. Empty title removes this language. Languages appear on the website only when switched on (SITE_LOCALES); currently on: {{ implode(', ', \App\Http\Middleware\SetLocale::enabled()) }}.</p>
+                <div lang="{{ $lang }}" class="space-y-4">
+                    <x-field name="title" label="Title" :value="$tl?->title" :id="'tl-title'" />
+                    <x-field name="summary" label="Short summary" :value="$tl?->summary" maxlength="300" :id="'tl-summary'" />
+                    @foreach ([['body', 'Description', $tl?->body, 5], ['includes', "What's included (one per line)", implode("\n", $tl?->includes ?? []), 4], ['audience', 'Who it is for (one per line)', implode("\n", $tl?->audience ?? []), 3], ['process', 'How it is done (one step per line)', implode("\n", $tl?->process ?? []), 4], ['benefits', 'Benefits (one per line)', implode("\n", $tl?->benefits ?? []), 3], ['faqs', 'Questions (Question? | Answer per line)', \App\Http\Controllers\Admin\CatalogueController::faqText($tl?->faqs), 4], ['exclusions', 'Not included', $tl?->exclusions, 2], ['disclaimer', 'Disclaimer', $tl?->disclaimer, 2]] as [$n, $l, $v, $rows])
+                        <div><label for="tl-{{ $n }}" class="field-label">{{ $l }}</label><textarea id="tl-{{ $n }}" name="{{ $n }}" rows="{{ $rows }}" class="input">{{ $v }}</textarea></div>
+                    @endforeach
+                    @if ($o->variants->isNotEmpty())
+                        <fieldset class="space-y-2"><legend class="field-label">Option names</legend>
+                            @foreach ($o->variants as $v)<div class="grid items-center gap-2 sm:grid-cols-2"><label for="tl-v-{{ $v->ref }}" class="text-sm text-ink-600" lang="en">{{ $v->name }}</label><input id="tl-v-{{ $v->ref }}" name="variant_names[{{ $v->ref }}]" value="{{ $v->translations[$lang]['name'] ?? '' }}" class="input"></div>@endforeach
+                        </fieldset>
+                    @endif
+                </div>
+                @can('catalogue.manage')<button class="btn-primary">Save {{ $langs[$lang] }} text</button>@endcan
+            </form>
+        @endif
+        </div>
+
+        @if ($o->exists)
+        <div class="space-y-6">
+            <section class="card p-5" aria-labelledby="st-h">
+                <h2 id="st-h" class="text-lg">Publication</h2>
+                <p class="mt-1 text-sm">Current: <strong>{{ \App\Models\Offering::STATUSES[$o->status] }}</strong>@if ($o->status === 'active') · <a href="{{ route('services.show', $o->slug) }}">View page</a>@endif</p>
+                @if ($o->family->requires_supplier)<p class="mt-2 text-xs text-warning-700">Needs an authorised supplier before it can go live.</p>@endif
+                @can('catalogue.manage')
+                <form method="POST" action="{{ route('admin.catalogue.status', $o->ref) }}" class="mt-3 flex gap-2">
+                    @csrf @method('PUT')
+                    <label for="f-status" class="sr-only">New status</label>
+                    <select id="f-status" name="status" class="input">@foreach (\App\Models\Offering::STATUSES as $k => $v)<option value="{{ $k }}" @selected($o->status === $k)>{{ $v }}</option>@endforeach</select>
+                    <button class="btn-outline">Apply</button>
+                </form>
+                @endcan
+            </section>
+
+            <section class="card p-5" aria-labelledby="var-h">
+                <h2 id="var-h" class="text-lg">Variants & prices</h2>
+                <p class="mt-1 text-xs text-ink-600">Prices in rupees. Leave the price empty to show "Price on request". Saving asks for your password and authenticator code.</p>
+                @foreach ($o->variants->push(new \App\Models\OfferingVariant(['participants' => 1, 'active' => true])) as $v)
+                    <details class="mt-3 rounded-xl border border-ink-200 p-3" @if (! $v->exists && $o->variants->count() <= 1) open @endif>
+                        <summary class="cursor-pointer text-sm font-medium">{{ $v->exists ? $v->name.' — '.\App\Support\Money::format($v->price_minor).($v->active ? '' : ' (off)') : '+ Add variant' }}</summary>
+                        @can('prices.manage')
+                        <form method="POST" action="{{ route('admin.catalogue.variant', $o->ref) }}" class="mt-3 grid gap-3 sm:grid-cols-2">
+                            @csrf
+                            <input type="hidden" name="variant" value="{{ $v->ref }}">
+                            <div class="sm:col-span-2"><x-field name="name" label="Name" :value="$v->name" :id="'v-name-'.($v->ref ?? 'new')" /></div>
+                            <x-select name="mode" label="Mode" :value="$v->mode" :options="['' => '—'] + \App\Models\OfferingVariant::MODES" :id="'v-mode-'.($v->ref ?? 'new')" />
+                            <x-field name="duration_min" label="Minutes" type="number" :value="$v->duration_min" :id="'v-dur-'.($v->ref ?? 'new')" />
+                            <x-field name="participants" label="People" type="number" :value="$v->participants" min="1" :id="'v-par-'.($v->ref ?? 'new')" />
+                            <x-field name="price" label="Price (₹)" :value="$v->price_minor !== null ? number_format($v->price_minor / 100, $v->price_minor % 100 ? 2 : 0, '.', '') : null" inputmode="decimal" :id="'v-price-'.($v->ref ?? 'new')" />
+                            <label class="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" name="urgent" value="1" class="size-4 accent-ink-900" @checked($v->urgent)> Priority / urgent</label>
+                            <label class="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" name="active" value="1" class="size-4 accent-ink-900" @checked($v->active)> Offered</label>
+                            <button class="btn-outline sm:col-span-2">Save variant</button>
+                        </form>
+                        @else
+                        <p class="mt-2 text-xs text-ink-600">You can view but not change prices.</p>
+                        @endcan
+                    </details>
+                @endforeach
+            </section>
+        </div>
+        @endif
+    </div>
+</x-layouts.admin>

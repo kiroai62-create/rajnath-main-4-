@@ -1,0 +1,100 @@
+# VPS stack. First install: deploy/install.sh (see docs/ops/vps-deployment.md). Updates: deploy/deploy.sh
+# deploy/.env is a link to .env.production so ${DOMAIN} etc. below are filled from it.
+# Caddy obtains and renews TLS certificates automatically for $DOMAIN.
+name: arj
+
+x-app: &app
+  build: { context: .., dockerfile: deploy/Dockerfile }
+  image: arj-app:latest
+  env_file: .env.production
+  restart: unless-stopped
+  depends_on:
+    db: { condition: service_healthy }
+    redis: { condition: service_started }
+  volumes:
+    - storage:/var/www/backend/storage
+    - uploads:/var/www/backend/public/uploads   # product and astrologer photos survive rebuilds
+
+services:
+  app:
+    <<: *app
+    healthcheck:
+      test: ["CMD-SHELL", "php -r 'exit(@fsockopen(\"127.0.0.1\", 9000) ? 0 : 1);'"]
+      interval: 30s
+      retries: 3
+
+  # queue and scheduler reuse the image built for app (building it three times at once fails on small servers)
+  queue:
+    <<: *app
+    build: !reset null
+    pull_policy: never
+    command: ["php", "artisan", "queue:work", "--tries=3", "--backoff=10,60,300", "--max-time=3600"]
+
+  scheduler:
+    <<: *app
+    build: !reset null
+    pull_policy: never
+    command: ["php", "artisan", "schedule:work"]
+
+  web:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in deploy/.env.production}
+      RTC_DOMAIN: ${RTC_DOMAIN:-rtc.localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - public:/srv/public:ro
+      - uploads:/srv/public/uploads:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [app]
+    extra_hosts: ["host.docker.internal:host-gateway"]   # reaches LiveKit on the host network
+
+  # In-app audio/video calls. Host networking so WebRTC media (UDP 7882, TCP 7881) is reachable
+  # directly; signalling (7880) is proxied by Caddy at rtc.<domain>. Open 7881/tcp and 7882/udp.
+  livekit:
+    image: livekit/livekit-server:${LIVEKIT_VERSION:-v1.9.0}
+    profiles: ["calls"]
+    restart: unless-stopped
+    network_mode: host
+    command: ["--config", "/etc/livekit.yaml"]
+    environment:
+      LIVEKIT_KEYS: "${LIVEKIT_API_KEY}: ${LIVEKIT_API_SECRET}"
+    volumes:
+      - ./livekit.yaml:/etc/livekit.yaml:ro
+
+  db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    env_file: .env.production
+    environment:
+      MARIADB_DATABASE: ${DB_DATABASE:-arj}
+      MARIADB_USER: ${DB_USERNAME:-arj}
+      MARIADB_AUTO_UPGRADE: "1"
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci", "--default-time-zone=+00:00", "--transaction-isolation=READ-COMMITTED"]
+    volumes:
+      - db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: [redis:/data]
+
+  # Copies built public assets into a volume Caddy can serve directly.
+  public-sync:
+    <<: *app
+    restart: "no"
+    user: root
+    entrypoint: []
+    command: ["sh", "-c", "cp -a /var/www/backend/public/. /srv/public/"]
+    volumes:
+      - public:/srv/public
+
+volumes: { db: {}, redis: {}, storage: {}, uploads: {}, public: {}, caddy_data: {}, caddy_config: {} }

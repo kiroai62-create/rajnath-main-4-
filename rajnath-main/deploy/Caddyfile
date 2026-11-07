@@ -1,0 +1,38 @@
+{$DOMAIN} {
+	encode zstd gzip
+	root * /srv/public
+	# Static files first; everything else goes to Laravel (PHP-FPM in the "app" container).
+	@static file
+	handle @static {
+		header /build/* Cache-Control "public, max-age=31536000, immutable"
+		# uploaded photos get a new file name on every upload, so they can be cached for long
+		header /uploads/* Cache-Control "public, max-age=2592000"
+		file_server
+	}
+	# private folders are never served as files
+	@private path /uploads/*.php /storage/* /.env* /.git*
+	respond @private 404
+	header {
+		-Server
+	}
+	php_fastcgi app:9000 {
+		root /var/www/backend/public
+	}
+	request_body {
+		max_size 100MB
+	}
+	log {
+		output stdout
+		format json
+	}
+}
+
+www.{$DOMAIN} {
+	redir https://{$DOMAIN}{uri} permanent
+}
+
+# In-app calls (LiveKit signalling). Set RTC_DOMAIN=rtc.<your domain> in .env.production (and a DNS
+# record) when you run the "calls" profile; the default rtc.localhost needs no certificate.
+{$RTC_DOMAIN} {
+	reverse_proxy host.docker.internal:7880
+}

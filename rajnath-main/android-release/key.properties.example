@@ -1,0 +1,7 @@
+# Copy to mobile/android/key.properties (git-ignored) and fill in the password.
+# The password is NOT in this repository. It was given to the owner privately
+# (store-password.txt inside signing-key-ENCRYPTED.zip). Keep it in a password manager.
+storePassword=PUT-THE-PASSWORD-HERE
+keyPassword=PUT-THE-SAME-PASSWORD-HERE
+keyAlias=astrorajnathjha
+storeFile=/absolute/path/to/arj-release-2026-11.jks
