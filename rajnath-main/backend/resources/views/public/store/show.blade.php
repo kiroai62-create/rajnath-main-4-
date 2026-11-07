@@ -71,6 +71,8 @@
                     </dl>
                 </section>
 
+                <x-ask-ai class="mt-10" :q="'Is '.$p->name.' right for me? What should I know before buying it?'" :suggestions="['How do I wear it?', 'Any side effects?', 'Is it genuine and certified?']" />
+
                 <section class="mt-10" aria-labelledby="faq-h">
                     <h2 id="faq-h" class="text-xl">Questions</h2>
                     <div class="mt-4 space-y-3">

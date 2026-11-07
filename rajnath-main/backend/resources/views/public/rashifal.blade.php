@@ -60,4 +60,5 @@
             @else{{ $hi ? 'राशिफल चंद्र राशि पर आधारित सामान्य मार्गदर्शन है। व्यक्तिगत फल के लिए कुंडली देखें।' : 'Rashifal is general guidance by Moon sign. For personal guidance, consult your own chart.' }}@endif
         </p>
     </div>
+    <div class="container-page pb-12"><x-ask-ai q="Explain today's Rashifal for my sign and what I should do." :suggestions="['What is my lucky colour today?', 'Any remedy for today?']" /></div>
 </x-layouts.public>

@@ -75,6 +75,7 @@
                 @if ($t->disclaimer)
                     <p class="mt-10 rounded-2xl border border-gold-200 bg-gold-50 p-4 text-sm text-ink-700"><strong>{{ __('Please note:') }}</strong> {{ $t->disclaimer }}</p>
                 @endif
+                <x-ask-ai class="mt-10" :q="'Tell me about '.$t->title.': how it works, what I get and the price options.'" :suggestions="['Which option should I choose?', 'How do I book it?', 'What happens after payment?']" />
             </article>
 
             <aside class="lg:sticky lg:top-24 lg:self-start" aria-labelledby="book-h">

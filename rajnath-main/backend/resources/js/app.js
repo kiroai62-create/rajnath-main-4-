@@ -190,6 +190,8 @@ Alpine.data('assistant', () => ({
         this.conversation = saved.conversation || null;
         this.handoff = !!saved.handoff;
         this.notice = saved.notice || this.$root.dataset.notice || '';
+        // "Ask AI about this" buttons: only the floating widget's chat answers them.
+        if (this.$root.id === 'ai-panel') { window.addEventListener('arj-ask', (e) => { this.draft = e.detail.q; this.send(); }); }
         window.addEventListener('arj-chat-sync', () => { const s = loadChat(); if (Array.isArray(s.messages)) { this.messages = s.messages; this.conversation = s.conversation || null; } });
         this.$nextTick(() => this.scroll());
     },
@@ -213,7 +215,7 @@ Alpine.data('assistant', () => ({
             const r = await fetch(this.$root.dataset.endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
-                body: JSON.stringify({ message: text, conversation: this.conversation }),
+                body: JSON.stringify({ message: text, conversation: this.conversation, page: (document.querySelector('meta[name="arj-page"]') || {}).content || null }),
             });
             const data = await r.json().catch(() => ({}));
             if (r.status === 429) { this.limited = true; this.error = (data.error && data.error.message) || 'Daily limit reached. Please try again tomorrow.'; return; }
@@ -245,6 +247,13 @@ Alpine.data('aiWidget', () => ({
     escape() { if (this.open) { this.open = false; if (this.$refs.opener) { this.$refs.opener.focus(); } } },
     get expanded() { return this.open ? 'true' : 'false'; },
     get openerLabel() { return this.open ? 'Close the AI assistant' : 'Ask AI'; },
+    init() { window.addEventListener('arj-ask', () => { this.open = true; }); },
+}));
+
+// "Ask AI about this" button (<x-ask-ai>): opens the chat and asks the button's question
+// with the current page as context.
+Alpine.data('askAi', () => ({
+    go() { window.dispatchEvent(new CustomEvent('arj-ask', { detail: { q: this.$el.dataset.q } })); },
 }));
 
 // Scroll reveal for sections below the fold, and number counters (data-count="1,00,000+").

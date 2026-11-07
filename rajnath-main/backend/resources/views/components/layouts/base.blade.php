@@ -51,6 +51,17 @@
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
     <link rel="alternate" type="text/plain" title="LLM summary" href="{{ url('/llms.txt') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @php
+        $slugParam = (string) (request()->route('slug') ?? '');
+        $arjPage = match (true) {
+            request()->routeIs('store.show') => 'product:'.$slugParam,
+            request()->routeIs('services.show') => 'service:'.$slugParam,
+            request()->routeIs('blog.show') => 'article:'.$slugParam,
+            request()->routeIs('tools.show') => 'tool:'.$slugParam,
+            default => '/'.ltrim(request()->path(), '/'),
+        };
+    @endphp
+    <meta name="arj-page" content="{{ \Illuminate\Support\Str::limit(strtolower($arjPage), 150, '') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @if ($indexable && $jsonld !== false){!! \App\Support\Seo\JsonLd::render(is_array($jsonld) ? $jsonld : []) !!}@endif
 </head>

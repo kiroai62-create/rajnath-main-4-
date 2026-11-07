@@ -22,7 +22,7 @@ class AssistantController extends Controller
 
     public function chat(Request $request): JsonResponse
     {
-        $d = $request->validate(['message' => ['required', 'string', 'max:1000'], 'conversation' => ['nullable', 'string', 'size:26']]);
+        $d = $request->validate(['message' => ['required', 'string', 'max:1000'], 'conversation' => ['nullable', 'string', 'size:26'], 'page' => ['nullable', 'string', 'max:160']]);
         $u = $request->user();
         if (! $u && $request->is('api/*') && $request->bearerToken()) {
             $t = auth('sanctum')->user();
@@ -32,7 +32,7 @@ class AssistantController extends Controller
             $u = null; // staff testing the public chat count as visitors
         }
         try {
-            $r = $this->assistant->chat($u, $request->is('api/*') ? 'app' : 'web', $d['message'], $d['conversation'] ?? null, $request->ip());
+            $r = $this->assistant->chat($u, $request->is('api/*') ? 'app' : 'web', $d['message'], $d['conversation'] ?? null, $request->ip(), $d['page'] ?? null);
         } catch (AssistantLimitReached $e) {
             return response()->json(['error' => ['code' => 'daily_limit', 'message' => $e->getMessage()]], 429);
         } catch (RuntimeException $e) {

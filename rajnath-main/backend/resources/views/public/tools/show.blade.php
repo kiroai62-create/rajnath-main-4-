@@ -40,6 +40,7 @@
                         <a href="{{ route('services.show', 'janma-kundali-reading') }}" class="btn-primary">Book a reading</a>
                     </div>
                 @endif
+                @if ($r)<x-ask-ai class="mt-6" :q="'Explain my '.$title.' result in simple words. What does it mean for me?'" :label="__('Explain my result with AI')" :suggestions="['What remedies are suggested?', 'Should I book a consultation?']" />@endif
             </section>
         </div>
     </div>

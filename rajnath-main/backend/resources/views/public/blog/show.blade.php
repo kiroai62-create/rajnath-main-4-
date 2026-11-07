@@ -46,6 +46,7 @@
                 <p class="mt-8 rounded-xl bg-ivory-100 p-4 text-sm text-ink-700">{{ __('Astrological guidance is traditional and interpretive. It does not replace medical, legal or financial advice.') }}</p>
             </div>
             <aside class="space-y-5">
+                <x-ask-ai :q="'Explain this article in simple words.'" :suggestions="['What remedy does it suggest?', 'Does this apply to me?']" />
                 <div class="card bg-ink-900 p-5 text-white lg:sticky lg:top-24">
                     <p class="font-semibold">{{ __('Want this read for your own chart?') }}</p>
                     <p class="mt-1 text-sm text-white/80">{{ __('Speak with Acharya Ji, or ask one question in writing.') }}</p>

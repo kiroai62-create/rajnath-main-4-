@@ -90,4 +90,5 @@
             <p class="mt-4 text-xs text-ink-600">{{ $p['method'] }} Regional festival rules and Muhurat selection need an astrologer's review; this page shows the astronomical Panchang.</p>
         @endif
     </div>
+    <div class="container-page pb-12"><x-ask-ai q="Explain today's Panchang in simple words: is today good for new work?" :suggestions="['What is Rahu Kaal today?', 'Which Choghadiya is best today?']" /></div>
 </x-layouts.public>

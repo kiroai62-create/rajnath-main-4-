@@ -2,6 +2,7 @@
 
 namespace App\Domain\Assistant;
 
+use App\Domain\Showcase\Profile;
 use App\Models\User;
 use App\Support\Business;
 use App\Support\Money;
@@ -52,7 +53,7 @@ class Assistant
     }
 
     /** @return array{conversation: string, reply: string, handoff: bool, disclaimer: string, actions: list<array<string, string>>} */
-    public function chat(?User $u, string $channel, string $message, ?string $conversationRef, ?string $ip): array
+    public function chat(?User $u, string $channel, string $message, ?string $conversationRef, ?string $ip, ?string $page = null): array
     {
         $message = trim(preg_replace('/\s+/u', ' ', $message));
         if (mb_strlen($message) < 2) {
@@ -87,7 +88,7 @@ class Assistant
 
             return $this->siteAnswer($conv, $u, $channel, $message);
         }
-        $messages = array_merge([['role' => 'system', 'content' => $this->systemPrompt($u)]], $history, [['role' => 'user', 'content' => mb_substr($message, 0, 2000)]]);
+        $messages = array_merge([['role' => 'system', 'content' => $this->systemPrompt($u).$this->pageContext($page)]], $history, [['role' => 'user', 'content' => mb_substr($message, 0, 2000)]]);
         $tools = new AssistantTools($u, $channel);
         $webSearch = (bool) $this->settings->get('ai.web_search', true);
         try {
@@ -173,7 +174,9 @@ class Assistant
 
         Booking policy: {$policy}
         Today is {$this->today()} (IST).
-        Free tools on the website: Kundli, Kundli matching, Panchang, vrat calendar, Rashifal and other calculators (/tools, /panchang, /calendar, /rashifal).
+        About: {$this->about()}
+        Website sections: services and pujas (/services), store with gemstones, rudraksha, yantra, malas, puja kits, samagri, idols and Vastu items (/gems), free calculators (/tools: kundli, matching, moon sign, nakshatra, sade sati, numerology, lucky dates and more), Panchang (/panchang), Rashifal (/rashifal), grah gochar (/gochar), muhurat (/muhurat), festivals (/festivals), vrat calendar (/calendar), articles (/blog), gallery (/gallery), awards (/awards), reviews (/reviews), courses (/courses), contact (/contact).
+        You can use tools for ALL of these: product_details, read_article, about_acharya, policy, planet_transits, festivals, muhurat and run_calculator, besides the ones above. Prefer looking things up over guessing.
 
         FAQs:
         {$faqs}
@@ -183,9 +186,39 @@ class Assistant
         TXT;
     }
 
+    /**
+     * "Ask AI about this page": the page the visitor opened the chat from, e.g. "product:ruby-manik",
+     * "service:kundli-reading", "article:sade-sati", "tool:kundli" or a site path like "/panchang".
+     */
+    public function pageContext(?string $page): string
+    {
+        $page = trim((string) $page);
+        if ($page === '' || ! preg_match('#^([a-z]+:[a-z0-9-]{1,140}|/[a-z0-9/_-]{0,140})$#', $page)) {
+            return '';
+        }
+        $hint = match (strtok($page, ':')) {
+            'product' => 'Call product_details with slug "'.substr($page, 8).'" before answering.',
+            'service' => 'Call service_details with slug "'.substr($page, 8).'" before answering.',
+            'article' => 'Call read_article with slug "'.substr($page, 8).'" before answering.',
+            'tool' => 'They are using the "'.substr($page, 5).'" calculator; explain its results in simple words and offer to run it with run_calculator.',
+            default => 'They are on the website page '.$page.'.',
+        };
+
+        return "\n\nCURRENT PAGE: the visitor opened the chat from {$page}. Questions like \"this\", \"is me kya hai\" or \"ye kaisa hai\" are about that page. {$hint}";
+    }
+
     private function who(?User $u): string
     {
         return $u ? 'The customer is signed in as '.$u->name.'.' : 'The visitor is NOT signed in: before booking, ask them to sign in with a one-time code (Sign in, top right of the website, or the Account tab in the app).';
+    }
+
+    /** One line about Acharya Ji with the current stats, from Admin › About & awards. */
+    private function about(): string
+    {
+        $p = app(Profile::class);
+        $st = $p->stats();
+
+        return Str::limit($p->text('profile.summary'), 600).' Stats: '.$st['years'].' years, '.$st['clients'].' clients, '.$st['awards'].' awards.';
     }
 
     private function today(): string
