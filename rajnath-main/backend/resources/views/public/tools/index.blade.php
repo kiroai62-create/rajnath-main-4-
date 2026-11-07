@@ -1,8 +1,10 @@
 <x-layouts.public :title="__('Free calculators')" :description="__('26 free astrology calculators: Kundli, Kundli matching, Moon sign, Nakshatra, Sade Sati, Manglik, numerology, Lo Shu grid, baby names and more.')" :jsonld="[['@type' => 'ItemList', 'name' => __('Free calculators'), 'itemListElement' => collect($tools)->keys()->values()->map(fn ($k, $i) => ['@type' => 'ListItem', 'position' => $i + 1, 'name' => $tools[$k][0], 'url' => route('tools.show', $k)])->all()], \App\Support\Seo\JsonLd::breadcrumbs([[__('Free calculators'), route('tools.index')]])]">
+    <x-page-hero>
+        <x-slot:eyebrow>Free tools</x-slot:eyebrow>
+        <x-slot:title>Calculators</x-slot:title>
+        Astronomical positions come from the Swiss Ephemeris with the Lahiri ayanamsha. Each tool is labelled: <strong>astronomical</strong> (computed), <strong>traditional</strong> (classical rules applied to computed positions), <strong>symbolic</strong> (numerology traditions) or <strong>entertainment</strong>.
+    </x-page-hero>
     <div class="container-page py-10">
-        <p class="eyebrow">Free tools</p>
-        <h1 class="mt-2 text-3xl">Calculators</h1>
-        <p class="mt-2 max-w-2xl text-ink-600">Astronomical positions come from the Swiss Ephemeris with the Lahiri ayanamsha. Each tool is labelled: <strong>astronomical</strong> (computed), <strong>traditional</strong> (classical rules applied to computed positions), <strong>symbolic</strong> (numerology traditions) or <strong>entertainment</strong>.</p>
         <a href="{{ route('panchang') }}" class="card mt-6 flex flex-wrap items-center justify-between gap-3 p-5 no-underline">
             <span><span class="eyebrow">Daily</span><span class="mt-1 block text-lg font-semibold text-ink-900">Today's Panchang</span><span class="text-sm text-ink-600">Tithi, nakshatra, yoga, karana, sunrise, Rahu Kaal and more for your city.</span></span>
             <span class="btn-primary">Open Panchang</span>

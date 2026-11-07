@@ -1,9 +1,11 @@
 @php $t = fn ($iso) => $iso ? \Illuminate\Support\Carbon::parse($iso)->format(\Illuminate\Support\Carbon::parse($iso)->format('Y-m-d') === $date ? 'g:i A' : 'g:i A, d M') : '—'; @endphp
 <x-layouts.public title="Panchang" description="Daily Panchang: tithi, nakshatra, yoga, karana, sunrise, sunset, Rahu Kaal for your city." :jsonld="[\App\Support\Seo\JsonLd::webApp('Panchang', __('Free, location-aware, from the Swiss Ephemeris.'), route('panchang')), \App\Support\Seo\JsonLd::breadcrumbs([['Panchang', route('panchang')]])]">
+    <x-page-hero>
+        <x-slot:eyebrow>Daily Panchang</x-slot:eyebrow>
+        <x-slot:title>{{ \Illuminate\Support\Carbon::parse($date)->format('l, d F Y') }}</x-slot:title>
+        {{ $placeLabel }}@if ($p) · UTC{{ $p['place']['utc_offset'] }}@endif
+    </x-page-hero>
     <div class="container-page py-10">
-        <p class="eyebrow">Daily Panchang</p>
-        <h1 class="mt-2 text-3xl">{{ \Illuminate\Support\Carbon::parse($date)->format('l, d F Y') }}</h1>
-        <p class="mt-1 text-ink-600">{{ $placeLabel }}@if ($p) · UTC{{ $p['place']['utc_offset'] }}@endif</p>
 
         <form method="GET" action="{{ route('panchang') }}" class="card mt-6 grid gap-4 p-4 sm:grid-cols-[12rem_1fr_auto] sm:items-end">
             <x-field name="date" label="Date" type="date" :value="$date" min="1800-01-01" max="2399-12-31" />

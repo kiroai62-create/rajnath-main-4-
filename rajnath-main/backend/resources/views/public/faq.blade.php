@@ -1,7 +1,9 @@
 <x-layouts.public :title="__('Questions & answers')" :description="__('Answers to common questions about consultations, birth details, languages, timings, remedies and privacy.')" :jsonld="[\App\Support\Seo\JsonLd::faq($faqs->map(fn ($f) => [$f->question, $f->answer])), \App\Support\Seo\JsonLd::breadcrumbs([[__('Questions & answers'), route('faq')]])]">
+    <x-page-hero>
+        <x-slot:eyebrow>Help</x-slot:eyebrow>
+        <x-slot:title>Questions & answers</x-slot:title>
+    </x-page-hero>
     <div class="container-page max-w-3xl py-12">
-        <p class="eyebrow">Help</p>
-        <h1 class="mt-2 text-3xl">Questions & answers</h1>
         <div class="mt-8 space-y-3">
             @forelse ($faqs as $f)
                 <details class="card group p-5">

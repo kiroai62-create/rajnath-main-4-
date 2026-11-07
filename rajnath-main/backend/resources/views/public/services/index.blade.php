@@ -1,7 +1,9 @@
 <x-layouts.public :title="__('Services')" :description="__('Consultations, Vastu, remedies and puja with Acharya Dr. Rajnath Jha.')">
+    <x-page-hero>
+        <x-slot:eyebrow>{{ __('Services') }}</x-slot:eyebrow>
+        <x-slot:title>{{ __('Find the right guidance') }}</x-slot:title>
+    </x-page-hero>
     <div class="container-page py-10">
-        <p class="eyebrow">{{ __('Services') }}</p>
-        <h1 class="mt-2 text-3xl">{{ __('Find the right guidance') }}</h1>
 
         <form method="GET" action="{{ route('services.index') }}" class="card mt-6 grid gap-4 p-4 sm:grid-cols-[1fr_auto_auto_auto] sm:items-end" role="search">
             <x-field name="q" :label="__('Search')" :value="$q" :placeholder="__('e.g. marriage, vastu, gemstone')" />

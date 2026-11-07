@@ -1,9 +1,11 @@
 @php $R = \App\Domain\Astro\Festivals::RELIGIONS; @endphp
 <x-layouts.public :title="'Festivals and holidays '.$year" :description="'Hindu, Islamic, Christian, Sikh, Jain and Buddhist festival dates for '.$year.' in '.$placeLabel.'.'" :jsonld="[\App\Support\Seo\JsonLd::breadcrumbs([['Festivals and holidays', route('festivals')]])]">
+    <x-page-hero>
+        <x-slot:eyebrow>Festivals · त्योहार</x-slot:eyebrow>
+        <x-slot:title>Festivals and holidays {{ $year }}</x-slot:title>
+        {{ $placeLabel }}
+    </x-page-hero>
     <div class="container-page py-10">
-        <p class="eyebrow">Festivals · त्योहार</p>
-        <h1 class="mt-2 text-3xl">Festivals and holidays {{ $year }}</h1>
-        <p class="mt-1 text-ink-600">{{ $placeLabel }}</p>
         <nav class="mt-5 flex flex-wrap gap-2" aria-label="Religion">
             <a href="{{ route('festivals', array_filter(['year' => $year, 'place_id' => $place->id])) }}" @class(['btn px-4', 'bg-ink-900 text-white' => ! $religion, 'border border-ink-200 bg-white text-ink-800' => $religion]) @if (! $religion) aria-current="page" @endif>All</a>
             @foreach ($R as $k => $l)<a href="{{ route('festivals', array_filter(['year' => $year, 'religion' => $k, 'place_id' => $place->id])) }}" @class(['btn px-4', 'bg-ink-900 text-white' => $religion === $k, 'border border-ink-200 bg-white text-ink-800' => $religion !== $k]) @if ($religion === $k) aria-current="page" @endif>{{ $l }}</a>@endforeach

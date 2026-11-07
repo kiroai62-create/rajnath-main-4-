@@ -2,10 +2,12 @@
 <x-layouts.public :title="$title" :description="__(':count reviews from clients of :name. Average rating :avg out of 5.', ['count' => $summary['count'], 'name' => $site('brand.practitioner_name'), 'avg' => $summary['average'] ?? '—'])"
     :robots="$rating || request('page') > 1 ? 'noindex,follow' : 'index,follow'"
     :jsonld="[\App\Support\Seo\JsonLd::breadcrumbs([[__('Reviews'), route('reviews')]])]">
+    <x-page-hero>
+        <x-slot:eyebrow>{{ __('Reviews') }}</x-slot:eyebrow>
+        <x-slot:title>{{ $title }}</x-slot:title>
+        {{ __('Every review is from a real client. Reviews marked "verified purchase" were written after a paid consultation, report, puja or order.') }}
+    </x-page-hero>
     <section class="container-page py-12">
-        <p class="eyebrow">{{ __('Reviews') }}</p>
-        <h1 class="mt-2 text-3xl sm:text-4xl">{{ $title }}</h1>
-        <p class="mt-3 max-w-2xl text-ink-600">{{ __('Every review is from a real client. Reviews marked "verified purchase" were written after a paid consultation, report, puja or order.') }}</p>
 
         <div class="mt-8 grid gap-8 lg:grid-cols-[18rem_1fr]">
             <aside class="space-y-6">

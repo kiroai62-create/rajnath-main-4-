@@ -1,9 +1,11 @@
 @php $V = \App\Domain\Astro\Vedic::class; $G = \App\Domain\Astro\Gochar::class; $S = fn ($i) => \Illuminate\Support\Str::before($V::SIGNS[$i], ' ('); @endphp
 <x-layouts.public title="Navagraha — the nine planets" description="Guide to the nine planets of Vedic astrology: what each signifies, signs ruled, exaltation, nakshatras, dasha years, day and gemstone." :jsonld="[\App\Support\Seo\JsonLd::breadcrumbs([['Navagraha', route('navagraha')]])]">
+    <x-page-hero>
+        <x-slot:eyebrow>Navagraha · नवग्रह</x-slot:eyebrow>
+        <x-slot:title>The nine planets</x-slot:title>
+        Vedic astrology reads nine grahas: the Sun, the Moon, five planets and the two lunar nodes, Rahu and Ketu. Classical (Parashari) facts for each are below, with where it is today.
+    </x-page-hero>
     <div class="container-page py-10">
-        <p class="eyebrow">Navagraha · नवग्रह</p>
-        <h1 class="mt-2 text-3xl">The nine planets</h1>
-        <p class="mt-2 max-w-3xl text-ink-600">Vedic astrology reads nine grahas: the Sun, the Moon, five planets and the two lunar nodes, Rahu and Ketu. Classical (Parashari) facts for each are below, with where it is today.</p>
         <div class="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             @foreach ($G::PLANETS as $p)@php $f = $G::FACTS[$p]; @endphp
                 <article class="card p-5">

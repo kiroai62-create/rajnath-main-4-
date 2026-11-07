@@ -9,9 +9,11 @@
     $slugs = \App\Http\Controllers\Web\ContentController::signSlugs();
 @endphp
 <x-layouts.public :title="$hi ? 'राशिफल' : 'Horoscope'" description="Daily, weekly, monthly, half-yearly and yearly Rashifal; love, career, finance, health and education; nakshatra, Chinese, numerology and tarot — written and reviewed by Acharya Dr. Rajnath Jha's team." :jsonld="[\App\Support\Seo\JsonLd::breadcrumbs([['Rashifal', route('rashifal')]])]">
+    <x-page-hero lang="{{ $locale }}">
+        <x-slot:eyebrow>{{ $hi ? 'राशिफल' : 'Horoscope' }}</x-slot:eyebrow>
+        <x-slot:title>{{ $heading }}</x-slot:title>
+    </x-page-hero>
     <div class="container-page py-10" lang="{{ $locale }}">
-        <p class="eyebrow">{{ $hi ? 'राशिफल' : 'Horoscope' }}</p>
-        <h1 class="mt-2 text-3xl">{{ $heading }}</h1>
 
         <nav aria-label="{{ $hi ? 'प्रकार' : 'Type' }}" class="mt-5 flex flex-wrap gap-2">
             @foreach ($T::PUBLIC_KINDS as $k)

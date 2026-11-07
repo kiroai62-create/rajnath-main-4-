@@ -1,9 +1,11 @@
 @php $V = \App\Domain\Astro\Vedic::class; $G = \App\Domain\Astro\Gochar::class; @endphp
 <x-layouts.public title="Grah Gochar — planetary transits" description="Where the nine planets are now in the sidereal zodiac, their next sign change, and transit dates for Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn, Rahu and Ketu." :jsonld="[\App\Support\Seo\JsonLd::webApp('Grah Gochar', __('Free, location-aware, from the Swiss Ephemeris.'), route('gochar')), \App\Support\Seo\JsonLd::breadcrumbs([['Grah Gochar', route('gochar')]])]">
+    <x-page-hero>
+        <x-slot:eyebrow>Grah Gochar · ग्रह गोचर</x-slot:eyebrow>
+        <x-slot:title>Planetary transits today</x-slot:title>
+        Sidereal positions (Lahiri ayanamsha) calculated with the Swiss Ephemeris. Open a planet for its sign changes, retrograde periods and sign-by-sign effects for the year.
+    </x-page-hero>
     <div class="container-page py-10">
-        <p class="eyebrow">Grah Gochar · ग्रह गोचर</p>
-        <h1 class="mt-2 text-3xl">Planetary transits today</h1>
-        <p class="mt-2 max-w-3xl text-ink-600">Sidereal positions (Lahiri ayanamsha) calculated with the Swiss Ephemeris. Open a planet for its sign changes, retrograde periods and sign-by-sign effects for the year.</p>
         @if (! $now)
             <div class="card mt-6 border-red-200 bg-red-50 p-5" role="alert">Transits could not be calculated right now. Please try again shortly.</div>
         @else

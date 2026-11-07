@@ -1,8 +1,10 @@
 <x-layouts.public title="Vrat calendar" description="Monthly vrat and festival calendar: Ekadashi, Pradosh, Purnima, Amavasya, Chaturthi, Sankranti and major festivals for your city." :jsonld="[\App\Support\Seo\JsonLd::webApp('Vrat calendar', __('Free, location-aware, from the Swiss Ephemeris.'), route('calendar')), \App\Support\Seo\JsonLd::breadcrumbs([['Vrat calendar', route('calendar')]])]">
+    <x-page-hero>
+        <x-slot:eyebrow>Calendar</x-slot:eyebrow>
+        <x-slot:title>{{ $month->format('F Y') }} — vrat and festival dates</x-slot:title>
+        {{ $placeLabel }}
+    </x-page-hero>
     <div class="container-page py-10">
-        <p class="eyebrow">Calendar</p>
-        <h1 class="mt-2 text-3xl">{{ $month->format('F Y') }} — vrat and festival dates</h1>
-        <p class="mt-1 text-ink-600">{{ $placeLabel }}</p>
         <nav class="mt-4 flex flex-wrap gap-2" aria-label="Month">
             <a class="btn-outline" href="{{ route('calendar', array_filter(['month' => $month->subMonth()->format('Y-m'), 'place_id' => $place->id])) }}"><svg aria-hidden="true" class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 6l-6 6 6 6"/></svg> <span class="sr-only">Previous month:</span> {{ $month->subMonth()->format('M') }}</a>
             <a class="btn-outline" href="{{ route('calendar', array_filter(['month' => $month->addMonth()->format('Y-m'), 'place_id' => $place->id])) }}"><span class="sr-only">Next month:</span> {{ $month->addMonth()->format('M') }} <svg aria-hidden="true" class="size-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 6l6 6-6 6"/></svg></a>

@@ -1,8 +1,10 @@
 <x-layouts.public title="Shubh Muhurat" description="Auspicious dates for marriage (vivah), namkaran, annaprashan, mundan, karnavedha, vidyarambh and upanayan, calculated from the Panchang for your city." :jsonld="[\App\Support\Seo\JsonLd::webApp('Shubh Muhurat', __('Free, location-aware, from the Swiss Ephemeris.'), route('muhurat.index')), \App\Support\Seo\JsonLd::breadcrumbs([['Shubh Muhurat', route('muhurat.index')]])]">
+    <x-page-hero>
+        <x-slot:eyebrow>Shubh Muhurat · शुभ मुहूर्त</x-slot:eyebrow>
+        <x-slot:title>Muhurat finder</x-slot:title>
+        Choose a ceremony to see suitable dates and time windows in a month, calculated from the Panchang for your city. Each list follows the classical tithi, vara and nakshatra rules; Acharya Ji finalises the exact muhurat with lagna and your family's charts.
+    </x-page-hero>
     <div class="container-page py-10">
-        <p class="eyebrow">Shubh Muhurat · शुभ मुहूर्त</p>
-        <h1 class="mt-2 text-3xl">Muhurat finder</h1>
-        <p class="mt-2 max-w-3xl text-ink-600">Choose a ceremony to see suitable dates and time windows in a month, calculated from the Panchang for your city. Each list follows the classical tithi, vara and nakshatra rules; Acharya Ji finalises the exact muhurat with lagna and your family's charts.</p>
         <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             @foreach (\App\Domain\Astro\Muhurat::EVENTS as $k => $e)
                 <a href="{{ route('muhurat.show', $k) }}" class="card p-5 no-underline hover:border-gold-500">
