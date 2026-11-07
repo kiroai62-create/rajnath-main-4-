@@ -61,6 +61,7 @@
             default => '/'.ltrim(request()->path(), '/'),
         };
     @endphp
+    @if (request()->is('admin', 'admin/*') && auth()->user()?->isStaff())<meta name="arj-admin-ai" content="{{ route('admin.ai.assist', [], false) }}">@endif
     <meta name="arj-page" content="{{ \Illuminate\Support\Str::limit(strtolower($arjPage), 150, '') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @if ($indexable && $jsonld !== false){!! \App\Support\Seo\JsonLd::render(is_array($jsonld) ? $jsonld : []) !!}@endif

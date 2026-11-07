@@ -462,3 +462,70 @@ Alpine.start();
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === '127.0.0.1' || location.hostname === 'localhost')) {
     window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
 }
+
+
+// Admin: a small "✨ AI" bar under every text box (write, improve, shorten, expand, Hindi,
+// English, reply). It calls /admin/ai/assist and only fills the box; staff still press Save.
+// Skip a box with data-no-ai. Secrets and passwords are never sent.
+const aiBox = document.querySelector('meta[name="arj-admin-ai"]');
+if (aiBox) {
+    const endpoint = aiBox.content;
+    const csrf = () => document.querySelector('meta[name="csrf-token"]').content;
+    const skip = /secret|password|service_account|token|key$/i;
+    const contextFor = (ta) => {
+        const form = ta.closest('form');
+        const parts = [`Page: ${document.title}`];
+        if (form) {
+            form.querySelectorAll('input[type=text], input:not([type]), textarea, select').forEach((el) => {
+                if (el === ta || !el.name || skip.test(el.name) || !el.value) { return; }
+                const label = (form.querySelector(`label[for="${el.id}"]`) || {}).textContent || el.name;
+                parts.push(`${label.trim()}: ${String(el.value).slice(0, 600)}`);
+            });
+        }
+        return parts.join('\n').slice(0, 5800);
+    };
+    const actions = [['write', '✨ Write'], ['improve', 'Improve'], ['shorten', 'Shorter'], ['expand', 'More detail'], ['hindi', 'हिन्दी'], ['english', 'English']];
+    document.querySelectorAll('textarea').forEach((ta) => {
+        if (ta.dataset.noAi !== undefined || skip.test(ta.name || '') || ta.readOnly || ta.disabled) { return; }
+        const bar = document.createElement('div');
+        bar.className = 'mt-1.5 flex flex-wrap items-center gap-1.5 text-xs print:hidden';
+        const status = document.createElement('span');
+        status.className = 'text-ink-600';
+        status.setAttribute('role', 'status');
+        let previous = null;
+        const undo = document.createElement('button');
+        undo.type = 'button'; undo.textContent = 'Undo AI'; undo.hidden = true;
+        undo.className = 'rounded-full border border-ink-200 bg-white px-2.5 py-1 font-medium text-ink-700 hover:bg-ivory-100';
+        undo.addEventListener('click', () => { if (previous !== null) { ta.value = previous; previous = null; undo.hidden = true; status.textContent = ''; } });
+        const list = /reply|note|body/.test(ta.name) && /ticket|enquir|review/.test(location.pathname) ? [['reply', '✨ Draft reply'], ...actions.slice(1)] : actions;
+        list.forEach(([action, label]) => {
+            const b = document.createElement('button');
+            b.type = 'button'; b.textContent = label;
+            b.className = 'rounded-full border border-gold-300 bg-gold-50 px-2.5 py-1 font-medium text-gold-700 hover:bg-gold-100 disabled:opacity-50';
+            b.addEventListener('click', async () => {
+                if (action !== 'write' && action !== 'reply' && ta.value.trim().length < 3) { status.textContent = 'Type some text first, or use Write.'; return; }
+                bar.querySelectorAll('button').forEach((x) => { x.disabled = true; });
+                status.textContent = 'AI is writing…';
+                try {
+                    const r = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrf() },
+                        body: JSON.stringify({ action, field: ta.name || ta.id || 'text', text: ta.value, context: contextFor(ta) }),
+                    });
+                    const data = await r.json().catch(() => ({}));
+                    if (!r.ok || !data.text) { status.textContent = (data.error && data.error.message) || (r.status === 429 ? 'Too many requests. Wait a minute.' : 'AI could not answer. Try again.'); return; }
+                    previous = ta.value; ta.value = data.text; undo.hidden = false;
+                    ta.dispatchEvent(new Event('input', { bubbles: true }));
+                    status.textContent = 'Draft added. Check it, then Save.';
+                } catch (e) {
+                    status.textContent = 'No connection.';
+                } finally {
+                    bar.querySelectorAll('button').forEach((x) => { x.disabled = false; });
+                }
+            });
+            bar.appendChild(b);
+        });
+        bar.appendChild(undo); bar.appendChild(status);
+        ta.insertAdjacentElement('afterend', bar);
+    });
+}

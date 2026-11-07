@@ -171,6 +171,7 @@ Route::prefix('staff')->name('staff.')->controller(StaffAuthController::class)->
 
 // ---- Admin control centre ----
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'staff'])->group(function () {
+    Route::post('ai/assist', Admin\AiAssistController::class)->middleware('throttle:admin-ai')->name('ai.assist');
     Route::get('/', Admin\DashboardController::class)->name('dashboard');
 
     Route::get('team', [Admin\TeamController::class, 'index'])->name('team.index');

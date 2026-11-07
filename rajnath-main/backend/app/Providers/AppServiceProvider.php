@@ -57,6 +57,7 @@ class AppServiceProvider extends ServiceProvider
         // reviews: 10 sends or edits an hour per account
         RateLimiter::for('reviews', fn (Request $r) => Limit::perHour(10)->by('reviews:'.($r->user()?->id ?: $r->ip())));
         RateLimiter::for('enquiry', fn (Request $r) => [Limit::perMinute(3)->by('enq:'.$r->ip()), Limit::perDay(30)->by('enqd:'.$r->ip())]);
+        RateLimiter::for('admin-ai', fn (Request $r) => Limit::perMinute(12)->by('u:'.$r->user()?->id));
         RateLimiter::for('provider-test', fn (Request $r) => Limit::perMinute(5)->by('u:'.$r->user()?->id));
 
         // Apply SMTP settings saved in admin (falls back to .env MAIL_* when none are saved).
