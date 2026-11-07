@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Web\AssistantController;
 use App\Http\Controllers\Web\CallController;
 use App\Http\Middleware\SetLocale;
+use App\Support\AppConfig;
 use Illuminate\Support\Facades\Route;
 
 // Versioned API shared by the Flutter app. Docs: docs/api/openapi.yaml
@@ -14,7 +15,9 @@ Route::prefix('v1')->middleware('throttle:api')->group(function () {
     Route::get('meta', fn () => response()->json([
         'api_version' => 'v1',
         'brand' => config('brand')['brand.name'],
-        'min_app_version' => config('app.min_mobile_version', '1.0.0'),
+        'min_app_version' => app(AppConfig::class)->minVersion(),
+        // Admin › Mobile app: maintenance, updates, announcement, home sections, features.
+        'app' => app(AppConfig::class)->toApi(),
         'source_code_url' => config('brand')['source.repository_url'],
         'push' => ($fb = app(Fcm::class)->clientConfig()) ? ['firebase' => $fb] : null,
         // The chat always answers (website guide when no AI key); "live" = real AI is answering.

@@ -271,6 +271,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'staff'])->group(fun
     Route::delete('faqs/{id}', [Admin\FaqController::class, 'destroy'])->whereNumber('id')->name('faqs.destroy');
     Route::get('website', [Admin\WebsiteController::class, 'edit'])->name('website.edit');
     Route::put('website', [Admin\WebsiteController::class, 'update'])->name('website.update');
+    Route::get('app', [Admin\AppController::class, 'edit'])->name('app.edit');
+    Route::put('app', [Admin\AppController::class, 'update'])->name('app.update');
     Route::get('blog', [Admin\BlogController::class, 'index'])->name('blog.index');
     Route::get('blog/new', [Admin\BlogController::class, 'edit'])->name('blog.create');
     Route::post('blog/new', [Admin\BlogController::class, 'save'])->name('blog.store');
