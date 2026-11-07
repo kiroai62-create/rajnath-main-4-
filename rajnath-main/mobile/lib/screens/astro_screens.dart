@@ -5,6 +5,7 @@ import '../api/api_client.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common.dart';
+import 'assistant_screen.dart';
 import '../widgets/tool_display.dart';
 
 const planetNames = {'sun': 'Sun', 'moon': 'Moon', 'mars': 'Mars', 'mercury': 'Mercury', 'jupiter': 'Jupiter', 'venus': 'Venus', 'saturn': 'Saturn', 'rahu': 'Rahu', 'ketu': 'Ketu'};
@@ -268,6 +269,7 @@ class _PanchangScreenState extends State<PanchangScreen> {
                 Text('${p['vara']}', style: Theme.of(context).textTheme.titleLarge),
                 if (lunarMonthText(p['masa']) != null) Text(lunarMonthText(p['masa'])!),
                 Text('Times shown in the place\'s local time (UTC${p['place']['utc_offset']}).', style: const TextStyle(color: ArjColors.ink600, fontSize: 12)),
+                AskAiCard(state: widget.state, page: '/panchang', question: 'Explain today\'s Panchang in simple words: is today good for new work?', suggestions: const ['What is Rahu Kaal today?', 'Best Choghadiya today?']),
                 const SectionTitle('Sun & Moon'),
                 Wrap(spacing: 16, runSpacing: 8, children: [
                   Text('Sunrise ${_t(p['sunrise'])}'), Text('Sunset ${_t(p['sunset'])}'), Text('Moonrise ${_t(p['moonrise'])}'), Text('Moonset ${_t(p['moonset'])}'),

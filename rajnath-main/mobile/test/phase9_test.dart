@@ -192,6 +192,8 @@ void main() {
             },
           },
     }, []);
+    tester.view.physicalSize = const Size(1200, 5000);
+    addTearDown(tester.view.reset);
     await tester.pumpWidget(MaterialApp(home: ServiceDetailScreen(state: AppState(api), slug: 'kundli')));
     await tester.pumpAndSettle();
     expect(find.text('Book'), findsOneWidget);

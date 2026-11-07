@@ -7,6 +7,7 @@ import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../util/validators.dart';
 import '../widgets/common.dart';
+import 'assistant_screen.dart';
 import 'activity_screens.dart';
 import 'services_screens.dart';
 
@@ -266,6 +267,7 @@ class ArticleScreen extends StatelessWidget {
                       ),
                     ),
                 ],
+                AskAiCard(state: state, page: 'article:$slug', question: 'Explain this article in simple words.', suggestions: const ['What remedy does it suggest?', 'Does this apply to me?']),
                 if (web.isNotEmpty) ...[
                   const SizedBox(height: 20),
                   FilledButton.icon(onPressed: () => openExternal(context, web), icon: const Icon(Icons.open_in_new), label: const Text('Read on the website')),

@@ -6,6 +6,7 @@ import '../models/slots.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common.dart';
+import 'assistant_screen.dart';
 import 'purchase_screens.dart';
 import 'store_screens.dart';
 
@@ -272,6 +273,8 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                         ),
                       ),
                     if (steps.isNotEmpty) ...[const SectionTitle('How booking works'), _steps(steps)],
+                    AskAiCard(state: state, page: 'service:$slug', question: 'Tell me about ${o['title']}: how it works, what I get and the price options.',
+                        suggestions: const ['Which option should I choose?', 'How do I book it?']),
                     if (faqs.isNotEmpty) ...[
                       const SectionTitle('Questions'),
                       for (final f in faqs)

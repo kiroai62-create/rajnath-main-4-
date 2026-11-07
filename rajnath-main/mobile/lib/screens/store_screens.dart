@@ -7,6 +7,7 @@ import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../util/validators.dart';
 import '../widgets/common.dart';
+import 'assistant_screen.dart';
 import 'purchase_screens.dart';
 import 'routing.dart';
 
@@ -183,6 +184,8 @@ class ProductDetailScreen extends StatelessWidget {
                       Text('${p['description']}', style: const TextStyle(height: 1.55)),
                     ],
                     for (final s in ((g['sections'] as List?) ?? const []).whereType<Map>()) _GuideSection(section: s),
+                    AskAiCard(state: state, page: 'product:$slug', question: 'Is ${p['name']} right for me? What should I know before buying it?',
+                        suggestions: const ['How do I wear it?', 'Any side effects?', 'Is it genuine?']),
                     if (((g['specs'] as List?) ?? const []).isNotEmpty) ...[
                       const SectionTitle('Specifications'),
                       Card(

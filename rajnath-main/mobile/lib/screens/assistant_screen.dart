@@ -35,8 +35,12 @@ const assistantSuggestions = [
 ];
 
 class AssistantScreen extends StatefulWidget {
-  const AssistantScreen({super.key, required this.state, this.initialMessage});
+  const AssistantScreen({super.key, required this.state, this.initialMessage, this.page});
   final AppState state;
+
+  /// Where the chat was opened from, e.g. "product:ruby-manik" or "/panchang", so questions
+  /// like "is this right for me?" are answered about that page.
+  final String? page;
 
   /// Sent straight away when the screen opens (from a suggestion elsewhere).
   final String? initialMessage;
@@ -90,6 +94,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
       final r = await widget.state.api.post('/assistant/chat', {
         'message': text,
         if (_conversation != null) 'conversation': _conversation,
+        if (widget.page != null) 'page': widget.page,
       }, timeout: const Duration(seconds: 90));
       setState(() {
         _conversation = r['conversation'] as String? ?? _conversation;
@@ -399,4 +404,48 @@ class _AssistantScreenState extends State<AssistantScreen> {
       ),
     ),
   );
+}
+
+
+/// "Ask AI about this" card for product, service, article, calculator, Panchang and Rashifal
+/// screens, like the website. Hidden when the owner switched the assistant off.
+class AskAiCard extends StatelessWidget {
+  const AskAiCard({super.key, required this.state, required this.question, required this.page, this.suggestions = const [], this.label = 'Ask AI about this'});
+  final AppState state;
+  final String question;
+  final String page;
+  final List<String> suggestions;
+  final String label;
+
+  void _open(BuildContext context, String q) =>
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => AssistantScreen(state: state, initialMessage: q, page: page)));
+
+  @override
+  Widget build(BuildContext context) {
+    if (!state.assistantEnabled) return const SizedBox.shrink();
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 14),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(colors: [ArjColors.gold50, Colors.white]),
+        borderRadius: BorderRadius.circular(ArjStyle.radiusCard),
+        border: Border.all(color: ArjColors.gold200),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Row(children: [
+          Icon(Icons.auto_awesome, color: ArjColors.gold700, size: 20),
+          SizedBox(width: 8),
+          Expanded(child: Text('Have a question? Ask our AI assistant', style: TextStyle(fontWeight: FontWeight.w700))),
+        ]),
+        const SizedBox(height: 10),
+        GoldButton(label: label, icon: Icons.chat_bubble_outline, onPressed: () => _open(context, question)),
+        if (suggestions.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Wrap(spacing: 8, runSpacing: 6, children: [
+            for (final s in suggestions) ActionChip(label: Text(s), onPressed: () => _open(context, s)),
+          ]),
+        ],
+      ]),
+    );
+  }
 }

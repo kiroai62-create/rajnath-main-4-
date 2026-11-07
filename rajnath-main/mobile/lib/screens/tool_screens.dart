@@ -6,6 +6,7 @@ import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../util/validators.dart';
 import '../widgets/common.dart';
+import 'assistant_screen.dart';
 import '../widgets/tool_display.dart';
 import 'activity_screens.dart';
 import 'astro_screens.dart';
@@ -271,6 +272,9 @@ class _ToolScreenState extends State<ToolScreen> {
             FilledButton(onPressed: _busy ? null : _calc, child: Text(_busy ? 'Calculating…' : 'Calculate')),
           ],
           if (_display != null) ToolDisplayView(_display!),
+          if (_display != null)
+            AskAiCard(state: widget.state, page: 'tool:$_slug', label: 'Explain my result with AI', question: 'Explain my ${widget.tool['title']} result in simple words. What does it mean for me?',
+                suggestions: const ['What remedies are suggested?', 'Should I book a consultation?']),
         ]),
       ),
     );
