@@ -35,7 +35,7 @@
 
         @if ($view === 'photos')
             @if ($photos->isEmpty())
-                <p class="card mt-8 p-8 text-center text-ink-600">{{ __('Photos will appear here soon.') }}</p>
+                <x-empty-state :title="__('Photos will appear here soon.')" />
             @else
                 <ul class="mt-8 columns-2 gap-4 sm:columns-3 lg:columns-4" aria-label="{{ __('All photos') }}">
                     @foreach ($photos as $n => $i)
@@ -52,7 +52,7 @@
                 @include('public.gallery.lightbox')
             @endif
         @elseif ($albums->isEmpty())
-            <p class="card mt-8 p-8 text-center text-ink-600">{{ __('Photos will appear here soon.') }}</p>
+            <x-empty-state :title="__('Photos will appear here soon.')" />
         @else
             <ul class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 @foreach ($albums as $a)@include('public.gallery.card', ['a' => $a])@endforeach

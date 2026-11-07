@@ -22,7 +22,7 @@
             @foreach (Blog::CATEGORIES as $k => $l)<a href="{{ route('blog', ['category' => $k]) }}" class="btn-outline px-3" @if ($category === $k) aria-current="page" @endif>{{ __($l) }}</a>@endforeach
         </nav>
         @if ($posts->isEmpty())
-            <p class="card mt-8 p-8 text-center text-ink-600">{{ $q ? __('No articles match your search.') : __('Articles will appear here soon.') }}</p>
+            <x-empty-state :title="$q ? __('No articles match your search.') : __('Articles will appear here soon.')" :text="__('Try fewer words, or ask our AI assistant your question directly.')" />
         @else
             <div class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 @foreach ($posts as $p)@include('public.blog.card', ['p' => $p])@endforeach

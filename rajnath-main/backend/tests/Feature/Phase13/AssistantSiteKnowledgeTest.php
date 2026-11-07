@@ -67,6 +67,8 @@ class AssistantSiteKnowledgeTest extends TestCase
         $this->assertContains('run_calculator', array_column(array_column($sent[0]['tools'], 'function'), 'name'));
         $this->postJson('/api/v1/assistant/chat', ['message' => 'hello there', 'page' => '<script>'])->assertOk();
         $this->assertStringNotContainsString('CURRENT PAGE', $sent[1]['messages'][0]['content']);
+        $this->get(route('courses'))->assertOk()->assertSee('Learn with the AI tutor');
+        $this->get(route('blog', ['q' => 'zzzzqq']))->assertOk()->assertSee('Meanwhile, you may like');
         $this->get(route('store.show', 'ruby-manik'))->assertSee('name="arj-page" content="product:ruby-manik"', false)->assertSee('Ask AI about this');
     }
 }

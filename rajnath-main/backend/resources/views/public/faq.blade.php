@@ -13,7 +13,7 @@
                     <p class="mt-3 leading-7 text-ink-700">{{ $f->answer }}</p>
                 </details>
             @empty
-                <p class="card p-6 text-center text-ink-600">No questions published yet.</p>
+                <x-empty-state :title="__('No questions published yet.')" :text="__('Ask our AI assistant — it knows our services, prices and policies.')" />
             @endforelse
         </div>
         <p class="mt-10 text-center text-ink-600">Still have a question? <a href="{{ route('contact') }}">Contact us</a>.</p>

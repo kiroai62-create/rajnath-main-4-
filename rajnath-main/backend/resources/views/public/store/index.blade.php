@@ -13,7 +13,7 @@
             @endforeach
         </ul></nav>
         @if ($products->isEmpty())
-            <div class="card mt-6 p-8 text-center"><h2 class="text-base">No items available right now</h2><p class="mt-2 text-sm text-ink-600">New stock is added regularly. For a personal recommendation, <a href="{{ route('services.show', 'gemstone-guidance') }}">book gemstone guidance</a>.</p></div>
+            <x-empty-state :title="__('No items in this category right now')"><p class="mt-2 text-sm text-ink-600">New stock is added regularly. For a personal recommendation, <a href="{{ route('services.show', 'gemstone-guidance') }}">book gemstone guidance</a> or <a href="{{ route('store.index') }}">see all items</a>.</p></x-empty-state>
         @else
             <div class="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
                 @foreach ($products as $p)

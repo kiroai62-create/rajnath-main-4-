@@ -33,6 +33,27 @@
         </ul>
     </section>
 
+    <section class="bg-cosmic stars relative isolate mt-10 overflow-hidden text-white" aria-labelledby="free-h">
+        <x-zodiac-wheel class="pointer-events-none absolute -right-28 top-1/2 -z-10 hidden size-[26rem] -translate-y-1/2 animate-spin-slower opacity-25 sm:block" />
+        <div class="container-page py-12">
+            <p class="eyebrow text-gold-200">{{ __('Start today, free') }}</p>
+            <h2 id="free-h" class="mt-2 text-2xl text-white sm:text-3xl">{{ __('Begin learning while the courses are prepared') }}</h2>
+            <ul class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                @foreach ([
+                    [route('learn'), __('Learn Jyotish guide'), __('Rashi, graha, bhava and nakshatra explained simply.')],
+                    [route('blog', ['category' => 'kundli']), __('Astrology articles'), __('Kundli, dasha, Sade Sati and more.')],
+                    [route('blog', ['category' => 'vastu']), __('Vastu articles'), __('Directions, zones and simple corrections.')],
+                    [route('tools.index'), __('Practise with calculators'), __('Make your own kundli and numerology chart.')],
+                ] as [$href, $t, $d])
+                    <li><a href="{{ $href }}" class="block h-full rounded-[var(--radius-card)] border border-gold-200/30 bg-white/5 p-4 no-underline transition hover:bg-white/10"><span class="block font-semibold text-gold-200">{{ $t }}</span><span class="mt-1 block text-sm text-white/75">{{ $d }}</span></a></li>
+                @endforeach
+            </ul>
+        </div>
+    </section>
+    <section class="container-page pt-10">
+        <x-ask-ai q="Teach me the basics of Vedic astrology in 5 short lessons, starting with lesson 1." :label="__('Learn with the AI tutor')" :suggestions="[__('What are the 12 rashis?'), __('What is a nakshatra?'), __('How do I read my kundli?')]" />
+    </section>
+
     <section class="container-page py-12">
         <div class="card mx-auto max-w-2xl p-5 sm:p-6">
             <h2 class="text-lg">{{ __('Tell me when admissions open') }}</h2>

@@ -51,7 +51,7 @@
             </aside>
             <div>
                 @if ($rows->isEmpty())
-                    <p class="card p-8 text-center text-ink-600">{{ __('No reviews to show yet.') }}</p>
+                    <x-empty-state :title="__('No reviews to show yet.')" :text="__('More than 1,35,000 people have consulted Acharya Ji. Reviews from online clients appear here after their session.')" />
                 @else
                     <div class="grid gap-5 md:grid-cols-2">
                         @foreach ($rows as $r)<x-review-card :r="$r" />@endforeach

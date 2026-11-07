@@ -37,7 +37,7 @@
         @endif
 
         @if ($rows->isEmpty())
-            <p class="card mt-6 p-8 text-center text-ink-600">{{ $hi ? 'इस अवधि का राशिफल अभी प्रकाशित नहीं हुआ है।' : 'This horoscope has not been published yet.' }}</p>
+            <x-empty-state :title="$hi ? 'इस अवधि का राशिफल अभी प्रकाशित नहीं हुआ है।' : 'This horoscope has not been published yet.'" :text="$hi ? 'तब तक AI सहायक से अपनी राशि का आज का हाल पूछें।' : 'Meanwhile, ask our AI assistant about your sign today.'" />
         @else
             <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 @foreach ($names as $s => $name)

@@ -15,7 +15,7 @@
         @if ($desc)<div class="mt-4 max-w-3xl space-y-3 leading-7">@foreach (preg_split('/\R\s*\R/', $desc) as $para)<p>{{ $para }}</p>@endforeach</div>@endif
 
         @if ($items->isEmpty())
-            <p class="card mt-8 p-8 text-center text-ink-600">{{ __('Photos will appear here soon.') }}</p>
+            <x-empty-state :title="__('Photos will appear here soon.')" />
         @else
             <ul class="mt-8 columns-2 gap-4 sm:columns-3 lg:columns-4" aria-label="{{ __('Photos and videos') }}">
                 @foreach ($items as $n => $i)
