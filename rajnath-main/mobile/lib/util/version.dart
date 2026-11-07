@@ -1,6 +1,6 @@
 /// Version of this build. Keep equal to `version:` in pubspec.yaml (a test checks it).
 /// Admin › Mobile app compares it with the minimum and latest versions.
-const appVersion = '1.11.0';
+const appVersion = '1.12.0';
 
 /// Compares dotted versions ("1.10.2" vs "1.9"): negative when [a] is older than [b].
 int compareVersions(String a, String b) {
