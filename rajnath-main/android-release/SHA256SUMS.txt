@@ -1,2 +1,2 @@
-316a7452c7f89b966c2c89047646c1a596c6d54f15333e2df212fe1f3d74dc69  astro-rajnath-jha-1.12.0-release.apk
-9b5db677a3a6f9990c3c2ef759ef855315c4f2f03e02165ab25a7d08863133fd  astro-rajnath-jha-1.12.0-release.aab
+2d1c1d14dacc94dedeffd43366a647c413d133821821cab05b2aec51810391fd  astro-rajnath-jha-1.12.1-release.apk
+ea3120b651b42b3d4e45970a9c9d0cf42dc9581384bc963e4924edb9cba99265  astro-rajnath-jha-1.12.1-release.aab

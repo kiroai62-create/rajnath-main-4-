@@ -12,6 +12,7 @@ import 'account_screens.dart';
 import 'call_screen.dart';
 import 'purchase_screens.dart';
 import 'review_screens.dart';
+import 'app_control.dart';
 import 'routing.dart';
 
 Future<void> openExternal(BuildContext context, String? url) async {
@@ -746,7 +747,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     if (ref != null && const {'booking', 'report', 'puja', 'palm', 'order'}.contains(kind)) {
       await Navigator.of(context).push(MaterialPageRoute(builder: (_) => screenForTarget(widget.state, kind, ref)));
     } else if (n['link'] != null) {
-      await openExternal(context, '${n['link']}');
+      // Admin › Push messages may point to an app screen (app:puja, app:product/…).
+      await openAppLink(context, widget.state, '${n['link']}');
     }
   }
 
