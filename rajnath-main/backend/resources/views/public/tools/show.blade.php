@@ -1,9 +1,15 @@
 @php [$title, $input, $kind, $desc] = $tool; $r = $result; @endphp
 <x-layouts.public :title="$title" :description="$desc.' '.__('Free, instant, by Acharya Dr. Rajnath Jha.')" :jsonld="[\App\Support\Seo\JsonLd::webApp($title, $desc, route('tools.show', $slug)), \App\Support\Seo\JsonLd::breadcrumbs([[__('Free calculators'), route('tools.index')], [$title, route('tools.show', $slug)]])]">
+    <section class="bg-cosmic stars relative isolate overflow-hidden text-white">
+        <x-zodiac-wheel class="pointer-events-none absolute -right-28 top-1/2 -z-10 hidden size-[26rem] -translate-y-1/2 animate-spin-slower opacity-25 sm:block" />
+        <div class="container-page py-10 sm:py-12">
+            <nav aria-label="Breadcrumb" class="text-sm text-white/70"><a href="{{ route('tools.index') }}" class="text-gold-200">{{ __('Free calculators') }}</a> / <span class="text-white">{{ $title }}</span></nav>
+            <p class="eyebrow mt-5 text-gold-200">{{ __('Free · instant') }} · {{ $kind }}</p>
+            <h1 class="mt-2 text-3xl text-white sm:text-4xl">{{ $title }}</h1>
+            <p class="mt-3 max-w-2xl text-white/80">{{ $desc }}</p>
+        </div>
+    </section>
     <div class="container-page py-10">
-        <nav aria-label="Breadcrumb" class="text-sm text-ink-600"><a href="{{ route('tools.index') }}">Calculators</a> / <span class="text-ink-900">{{ $title }}</span></nav>
-        <div class="mt-4 flex flex-wrap items-center gap-3"><h1 class="text-3xl">{{ $title }}</h1><span class="badge-ink">{{ $kind }}</span></div>
-        <p class="mt-2 max-w-2xl text-ink-600">{{ $desc }}</p>
         @if ($kind === 'entertainment')<p class="mt-3 max-w-2xl rounded-xl border border-gold-200 bg-gold-50 p-3 text-sm">This is a game for fun. It does not predict anything about a real relationship.</p>@endif
         @if ($kind === 'symbolic')<p class="mt-3 max-w-2xl rounded-xl bg-ivory-100 p-3 text-sm">Numerology and colour associations are traditional symbolic systems, not scientific measurements.</p>@endif
 

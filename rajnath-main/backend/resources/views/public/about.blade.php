@@ -7,22 +7,30 @@
 @endphp
 <x-layouts.public :title="__('About :name', ['name' => $name])" :description="\Illuminate\Support\Str::limit($p->text('profile.summary'), 158)" :image="$p->photo('profile.photo_about')" type="profile"
     :jsonld="[['@type' => 'ProfilePage', 'url' => route('about'), 'mainEntity' => ['@id' => \App\Support\Seo\JsonLd::id('founder')], 'dateModified' => \App\Support\Seo\JsonLd::profileModified()], \App\Support\Seo\JsonLd::breadcrumbs([[__('About'), route('about')]])]">
-    <section class="container-page grid gap-10 py-12 lg:grid-cols-[0.8fr_1.2fr]">
-        <figure class="mx-auto w-full max-w-sm">
-            <x-photo :src="$p->photo('profile.photo_about')" :alt="$name" eager class="h-auto w-full rounded-t-[999px] rounded-b-[var(--radius-card)] shadow-[var(--shadow-card)] ring-4 ring-gold-300/70" />
-        </figure>
-        <div>
-            <p class="eyebrow">{{ __('About the Acharya') }}</p>
-            <h1 class="mt-2 text-3xl sm:text-4xl">{{ $name }}</h1>
-            <p class="mt-2 text-ink-600">{{ $p->text('profile.headline') }}</p>
+    <section class="bg-cosmic stars relative isolate overflow-hidden text-white">
+        <x-zodiac-wheel class="pointer-events-none absolute -left-32 top-1/2 -z-10 hidden size-[30rem] -translate-y-1/2 animate-spin-slower opacity-25 sm:block" />
+        <div class="container-page grid items-center gap-10 py-12 lg:grid-cols-[1.2fr_0.8fr]">
+            <div>
+                <p class="eyebrow text-gold-200">{{ __('About the Acharya') }}</p>
+                <h1 class="mt-2 text-3xl text-white sm:text-5xl"><span class="text-gold-grad">{{ $name }}</span></h1>
+                <p class="mt-3 max-w-xl text-lg text-white/80">{{ $p->text('profile.headline') }}</p>
+                <dl class="mt-8 grid max-w-xl grid-cols-2 gap-3 sm:grid-cols-4">
+                    @foreach ([[__('Years of practice'), $stats['years']], [__('Clients guided'), $stats['clients']], [__('Awards'), $stats['awards']], [__('Languages'), $stats['languages']]] as [$l, $n])
+                        @if ($n !== '' && $n !== '0')<div class="flex flex-col rounded-2xl border border-gold-200/30 bg-white/5 p-3"><dt class="order-2 text-xs text-white/70">{{ $l }}</dt><dd class="order-1 text-2xl font-semibold text-gold-200">{{ $n }}</dd></div>@endif
+                    @endforeach
+                </dl>
+                <div class="mt-8 flex flex-wrap gap-3"><a href="{{ route('services.index', ['family' => 'consultation']) }}" class="btn-gold">{{ __('Book a consultation') }}</a><a href="{{ route('awards') }}" class="btn-outline border-gold-200/50 bg-white/5 text-white">{{ __('Awards and honours') }}</a></div>
+            </div>
+            <figure class="mx-auto w-full max-w-sm">
+                <x-photo :src="$p->photo('profile.photo_about')" :alt="$name" eager class="h-auto w-full rounded-t-[999px] rounded-b-[var(--radius-card)] shadow-[0_30px_60px_-20px_rgb(0_0_0/0.6)] ring-4 ring-gold-300/70" />
+            </figure>
+        </div>
+    </section>
+    <section class="container-page reveal py-12">
+        <div class="mx-auto max-w-3xl">
             <div class="mt-6 space-y-4 leading-7">
                 @foreach ($p->paragraphs() as $para)<p>{{ $para }}</p>@endforeach
             </div>
-            <dl class="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                @foreach ([[__('Years of practice'), $stats['years']], [__('Clients guided'), $stats['clients']], [__('Awards'), $stats['awards']], [__('Languages'), $stats['languages']]] as [$l, $n])
-                    @if ($n !== '' && $n !== '0')<div class="card p-4"><dt class="text-xs text-ink-600">{{ $l }}</dt><dd class="mt-1 text-2xl font-semibold">{{ $n }}</dd></div>@endif
-                @endforeach
-            </dl>
             @if ($p->entries('expertise')->isNotEmpty())
                 <h2 class="mt-8 text-lg">{{ __('Areas of expertise') }}</h2>
                 <ul class="mt-3 flex flex-wrap gap-2 text-sm">

@@ -1,20 +1,26 @@
 @php $qa = \App\Support\Seo\JsonLd::serviceQuestions($o); @endphp
 <x-layouts.public :title="$t->title" :description="$t->meta_description ?: $t->summary" :image="$o->image_path" :jsonld="[\App\Support\Seo\JsonLd::service($o), \App\Support\Seo\JsonLd::faq($qa), \App\Support\Seo\JsonLd::breadcrumbs([[__('Services'), route('services.index')], [$o->family->label(), route('services.index', ['family' => $o->family->slug])], [$t->title, route('services.show', $o->slug)]])]">
+    <section class="bg-cosmic stars relative isolate overflow-hidden text-white">
+        <x-zodiac-wheel class="pointer-events-none absolute -right-28 top-1/2 -z-10 hidden size-[28rem] -translate-y-1/2 animate-spin-slower opacity-25 sm:block" />
+        <div class="container-page py-10 sm:py-12">
+            <nav aria-label="Breadcrumb" class="text-sm text-white/70">
+                <ol class="flex flex-wrap gap-1.5">
+                    <li><a href="{{ route('services.index') }}" class="text-gold-200">{{ __('Services') }}</a> /</li>
+                    <li><a href="{{ route('services.index', ['family' => $o->family->slug]) }}" class="text-gold-200">{{ $o->family->label() }}</a> /</li>
+                    <li aria-current="page" class="text-white">{{ $t->title }}</li>
+                </ol>
+            </nav>
+            <p class="eyebrow mt-5 text-gold-200">{{ $o->family->label() }}</p>
+            <h1 class="mt-2 max-w-3xl text-3xl text-white sm:text-4xl">{{ $t->title }}</h1>
+            <p class="mt-3 max-w-2xl text-lg text-white/80">{{ $t->summary }}</p>
+            <a href="#book-h" class="btn-gold mt-6">{{ __('See prices and book') }}</a>
+        </div>
+    </section>
     <div class="container-page py-10">
-        <nav aria-label="Breadcrumb" class="text-sm text-ink-600">
-            <ol class="flex flex-wrap gap-1.5">
-                <li><a href="{{ route('services.index') }}">{{ __('Services') }}</a> /</li>
-                <li><a href="{{ route('services.index', ['family' => $o->family->slug]) }}">{{ $o->family->label() }}</a> /</li>
-                <li aria-current="page" class="text-ink-900">{{ $t->title }}</li>
-            </ol>
-        </nav>
-
-        <div class="mt-6 grid gap-10 lg:grid-cols-[1fr_24rem]">
+        <div class="grid gap-10 lg:grid-cols-[1fr_24rem]">
             <article class="min-w-0">
-                <h1 class="text-3xl sm:text-4xl">{{ $t->title }}</h1>
-                <p class="mt-3 text-lg text-ink-600">{{ $t->summary }}</p>
                 @if ($o->image_path)
-                    <x-framed-photo :src="$o->image_path" ratio="4/3" class="mt-6 w-full rounded-[var(--radius-card)] shadow-[var(--shadow-card)]" />
+                    <x-framed-photo :src="$o->image_path" ratio="4/3" class="w-full rounded-[var(--radius-card)] shadow-[var(--shadow-card)]" />
                 @endif
                 @if ($t->process || $t->benefits || $t->faqList())
                     <nav aria-label="{{ __('On this page') }}" class="mt-6 flex flex-wrap gap-2 text-sm">

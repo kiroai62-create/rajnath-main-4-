@@ -1,11 +1,10 @@
 @php $B = app(\App\Support\Business::class); $tel = fn ($p) => preg_replace('/^\+91(\d{5})(\d{5})$/', '+91 $1 $2', $p); @endphp
 <x-layouts.public :title="__('Contact')" :description="__('Address, phone, WhatsApp and office timings of Acharya Dr. Rajnath Jha, Kankarbagh, Patna.')"
     :jsonld="[['@type' => 'ContactPage', 'url' => route('contact'), 'about' => ['@id' => \App\Support\Seo\JsonLd::id('business')]], \App\Support\Seo\JsonLd::breadcrumbs([[__('Contact'), route('contact')]])]">
+    <x-page-hero :eyebrow="__('Contact')" :title="__('Visit, call or write')">{{ __('Our office is in Kankarbagh, Patna. Call, WhatsApp or write to us; consultations are held in person or online.') }}</x-page-hero>
     <div class="container-page grid gap-10 py-12 lg:grid-cols-2">
         <div>
-            <p class="eyebrow">{{ __('Contact') }}</p>
-            <h1 class="mt-2 text-3xl">{{ __('Visit, call or write') }}</h1>
-            <div class="mt-6 space-y-4">
+            <div class="space-y-4">
                 <div class="card p-5">
                     <h2 class="text-base">{{ __('Office') }}</h2>
                     <address class="mt-2 not-italic text-ink-700">{{ $B->address()['street'] }},<br>{{ $B->address()['locality'] }}, {{ $B->address()['region'] }} {{ $B->address()['postal_code'] }}</address>
