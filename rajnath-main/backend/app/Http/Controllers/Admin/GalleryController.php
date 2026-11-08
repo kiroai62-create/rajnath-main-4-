@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Domain\Assistant\AiProviders;
+use App\Domain\Content\RashifalWriter;
 use App\Domain\Showcase\Gallery;
 use App\Domain\Showcase\Profile;
 use App\Http\Controllers\Controller;
@@ -9,8 +11,11 @@ use App\Support\Audit\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use RuntimeException;
+use Throwable;
 
 /**
  * Admin › Gallery. Staff with media.manage upload photos, add YouTube videos and edit albums;
@@ -143,6 +148,63 @@ class GalleryController extends Controller
         $this->changed();
 
         return back()->with('status', 'Saved.');
+    }
+
+    /**
+     * "✨ Captions with AI": suggests an English and Hindi caption for each photo without one,
+     * from the album's title, place, date and description (AI does not see the photos). The
+     * drafts are shown for review; nothing is saved until "Save all captions".
+     */
+    public function aiCaptions(string $ref, AiProviders $ai): RedirectResponse
+    {
+        $this->authorize('media.manage');
+        $a = $this->album($ref);
+        $items = DB::table('gallery_items')->where('album_id', $a->id)->where(fn ($q) => $q->whereNull('caption')->orWhere('caption', ''))->orderBy('sort')->orderBy('id')->limit(40)->get(['id', 'kind', 'sort']);
+        if ($items->isEmpty()) {
+            return back()->with('status', 'Every photo already has a caption.');
+        }
+        try {
+            if (! $ai->available()) {
+                throw new RuntimeException('AI is not switched on. Add a key in Admin › AI assistant first.');
+            }
+            $album = json_encode(['title' => $a->title, 'category' => Gallery::CATEGORIES[$a->category] ?? $a->category, 'date' => $a->event_date, 'place' => $a->location, 'description' => Str::limit((string) $a->description, 1200)], JSON_UNESCAPED_UNICODE);
+            [, , $text] = $ai->complete([
+                ['role' => 'system', 'content' => 'You write short, respectful photo captions for the gallery of an Indian Vedic astrologer. Return strict JSON only.'],
+                ['role' => 'user', 'content' => "Album: {$album}
+Write one caption for each of these ".$items->count().' items (ids: '.$items->pluck('id')->implode(', ').'), in English (max 90 characters) and Hindi (max 90 characters). '
+                    .'You cannot see the photos, so describe the occasion, place and moment from the album details and vary the wording; never name people who are not in the album details and never invent facts. '
+                    .'Return ONLY {"captions": [{"id": 1, "en": "...", "hi": "..."}]}'],
+            ], 3000);
+            $rows = RashifalWriter::extractJson($text)['captions'] ?? null;
+            if (! is_array($rows)) {
+                throw new RuntimeException('The AI answer could not be read. Please try again.');
+            }
+        } catch (Throwable $e) {
+            report($e);
+
+            return back()->withErrors(['ai' => mb_substr($e->getMessage(), 0, 300)]);
+        }
+        $ids = $items->pluck('id')->all();
+        $drafts = collect($rows)->filter(fn ($r) => is_array($r) && in_array((int) ($r['id'] ?? 0), $ids, true))
+            ->mapWithKeys(fn ($r) => [(int) $r['id'] => ['en' => mb_substr(strip_tags((string) ($r['en'] ?? '')), 0, 300), 'hi' => mb_substr(strip_tags((string) ($r['hi'] ?? '')), 0, 300)]])->all();
+        $this->audit->record('gallery.ai_captions', null, ['album' => $a->slug, 'count' => count($drafts)]);
+
+        return back()->with('ai_captions', $drafts)->with('status', count($drafts).' caption drafts ready below. Check them, then press Save all captions.');
+    }
+
+    public function saveCaptions(Request $request, string $ref): RedirectResponse
+    {
+        $this->authorize('media.manage');
+        $a = $this->album($ref);
+        $d = $request->validate(['captions' => ['required', 'array', 'max:60'], 'captions.*.en' => ['nullable', 'string', 'max:300'], 'captions.*.hi' => ['nullable', 'string', 'max:300']]);
+        $n = 0;
+        foreach ($d['captions'] as $id => $c) {
+            $n += DB::table('gallery_items')->where('album_id', $a->id)->where('id', (int) $id)
+                ->update(['caption' => ($c['en'] ?? '') !== '' ? $c['en'] : null, 'caption_hi' => ($c['hi'] ?? '') !== '' ? $c['hi'] : null, 'updated_at' => now()]);
+        }
+        $this->audit->record('gallery.captions_saved', null, ['album' => $a->slug, 'count' => $n]);
+
+        return back()->with('status', $n.' captions saved.');
     }
 
     public function destroyItem(string $ref, int $id): RedirectResponse

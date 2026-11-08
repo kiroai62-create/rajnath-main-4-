@@ -274,6 +274,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'staff'])->group(fun
     Route::get('website', [Admin\WebsiteController::class, 'edit'])->name('website.edit');
     Route::put('website', [Admin\WebsiteController::class, 'update'])->name('website.update');
     Route::get('app', [Admin\AppController::class, 'edit'])->name('app.edit');
+    Route::get('broadcast', [Admin\BroadcastController::class, 'index'])->name('broadcast.index');
+    Route::post('broadcast/ai', [Admin\BroadcastController::class, 'ai'])->middleware('throttle:provider-test')->name('broadcast.ai');
     Route::put('app', [Admin\AppController::class, 'update'])->name('app.update');
     Route::get('blog', [Admin\BlogController::class, 'index'])->name('blog.index');
     Route::get('blog/new', [Admin\BlogController::class, 'edit'])->name('blog.create');
@@ -301,11 +303,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'staff'])->group(fun
         Route::post('{ref}/photos', 'upload')->name('upload');
         Route::post('{ref}/videos', 'addVideo')->name('video');
         Route::put('{ref}/items/{id}', 'updateItem')->whereNumber('id')->name('item');
+        Route::post('{ref}/ai-captions', 'aiCaptions')->middleware('throttle:provider-test')->name('ai-captions');
+        Route::put('{ref}/captions', 'saveCaptions')->name('captions');
         Route::delete('{ref}/items/{id}', 'destroyItem')->whereNumber('id')->name('item.destroy');
     });
 
     // Sensitive changes: fresh password + TOTP confirmation required.
     Route::middleware('step.up')->group(function () {
+        Route::post('broadcast', [Admin\BroadcastController::class, 'send'])->middleware('throttle:provider-test')->name('broadcast.send');
         Route::put('push', [Admin\IntegrationsController::class, 'savePush'])->name('push.save');
         Route::put('calling', [Admin\CallingController::class, 'update'])->name('calling.update');
         Route::post('calling/test', [Admin\CallingController::class, 'test'])->middleware('throttle:provider-test')->name('calling.test');

@@ -24,6 +24,33 @@
                 </form>
             </div>
 
+            @php $drafts = session('ai_captions', []); $byId = $items->keyBy('id'); @endphp
+            <div class="card border-gold-200 bg-gold-50 p-4">
+                <form method="POST" action="{{ route('admin.gallery.ai-captions', $album->ref) }}" class="flex flex-wrap items-center gap-3">
+                    @csrf
+                    <p class="min-w-0 flex-1 text-sm"><strong>✨ Captions with AI</strong> — suggests English and Hindi captions for photos that have none, from the album title, place, date and description. You check them before saving.</p>
+                    <button class="btn-gold">Suggest captions</button>
+                </form>
+                @error('ai')<p class="field-error mt-2" role="alert">{{ $message }}</p>@enderror
+                @if ($drafts)
+                    <form method="POST" action="{{ route('admin.gallery.captions', $album->ref) }}" class="mt-4 space-y-3 border-t border-gold-200 pt-4">
+                        @csrf @method('PUT')
+                        <h3 class="text-base">Caption drafts</h3>
+                        @foreach ($drafts as $id => $c)
+                            @continue(! $byId->has($id))
+                            @php $di = $byId[$id]; @endphp
+                            <div class="grid items-start gap-3 sm:grid-cols-[6rem_1fr]">
+                                <img src="{{ $di->kind === 'photo' ? '/'.($di->thumb_path ?: $di->path) : Gallery::videoThumb($di->video_id) }}" alt="" class="aspect-[4/3] w-24 rounded-lg object-cover" loading="lazy">
+                                <div class="space-y-2">
+                                    <input name="captions[{{ $id }}][en]" value="{{ $c['en'] }}" maxlength="300" class="input" aria-label="Caption {{ $loop->iteration }}">
+                                    <input name="captions[{{ $id }}][hi]" value="{{ $c['hi'] }}" maxlength="300" class="input" lang="hi" aria-label="Hindi caption {{ $loop->iteration }}">
+                                </div>
+                            </div>
+                        @endforeach
+                        <button class="btn-primary">Save all captions</button>
+                    </form>
+                @endif
+            </div>
             <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 @forelse ($items as $i)
                     <li class="card overflow-hidden">

@@ -34,6 +34,7 @@ class AdminMenu
         'Website' => [
             ['Website & home page', 'admin.website.edit', 'content.publish', 'layout'],
             ['Mobile app', 'admin.app.edit', 'content.publish', 'devices'],
+            ['Push messages', 'admin.broadcast.index', 'content.publish', 'bell'],
             ['About & awards', 'admin.profile.edit', 'content.author', 'award'],
             ['Gallery', 'admin.gallery.index', 'media.manage', 'image'],
             ['Articles', 'admin.blog.index', 'content.author', 'pen'],
