@@ -5,6 +5,7 @@ namespace App\Domain\Content;
 use App\Domain\Assistant\AiProviders;
 use App\Domain\Astro\Gochar;
 use App\Domain\Astro\Vedic;
+use App\Http\Middleware\SetLocale;
 use App\Support\Settings\SettingsRepository;
 use Carbon\CarbonImmutable;
 use DateTimeImmutable;
@@ -97,7 +98,7 @@ class RashifalWriter
     /** @return list<string> */
     private function locales(): array
     {
-        return array_values(array_intersect(['en', 'hi'], config('locales.enabled', ['en']) ?: ['en'])) ?: ['en'];
+        return array_values(array_intersect(['en', 'hi'], SetLocale::enabled())) ?: ['en'];
     }
 
     /** Subjects (sign indexes) still without a reading for this period. */

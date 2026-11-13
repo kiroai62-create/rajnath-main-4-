@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web;
 use App\Domain\Notify\Notifier;
 use App\Domain\Notify\StaffAlerts;
 use App\Domain\Places\PlaceSearch;
+use App\Domain\Puja\PujaRequests;
 use App\Domain\Showcase\Gallery;
 use App\Domain\Showcase\Profile;
 use App\Http\Controllers\Controller;
@@ -26,7 +27,7 @@ class SiteController extends Controller
     {
         return view('public.home', [
             'featured' => Offering::public()->with(['translations', 'variants', 'family'])->where('featured', true)->orderBy('sort')->limit(6)->get(),
-            'families' => ServiceFamily::whereHas('offerings', fn ($q) => $q->where('status', 'active'))->orderBy('sort')->withCount(['offerings' => fn ($q) => $q->where('status', 'active')])->get(),
+            'families' => ServiceFamily::whereHas('offerings', fn ($q) => $q->public())->orderBy('sort')->withCount(['offerings' => fn ($q) => $q->public()])->get(),
             'profile' => $profile = app(Profile::class),
             'highlights' => $profile->homeHighlights(),
             'albums' => app(Gallery::class)->publicAlbums(null, 3, true),
@@ -34,10 +35,13 @@ class SiteController extends Controller
         ]);
     }
 
-    public function services(Request $request): View
+    public function services(Request $request): View|RedirectResponse
     {
         $q = trim((string) $request->query('q', ''));
         $family = (string) $request->query('family', '');
+        if ($family !== '' && ServiceFamily::where('slug', $family)->whereIn('code', PujaRequests::RETIRED_FAMILIES)->exists()) {
+            return redirect()->route('puja-request.create', status: 301);
+        }
         $mode = (string) $request->query('mode', '');
         $offerings = Offering::public()->with(['translations', 'variants', 'family'])
             ->when($family !== '', fn ($w) => $w->whereHas('family', fn ($f) => $f->where('slug', $family)))
@@ -50,7 +54,7 @@ class SiteController extends Controller
 
         return view('public.services.index', [
             'offerings' => $offerings, 'q' => $q, 'family' => $family, 'mode' => $mode,
-            'families' => ServiceFamily::whereHas('offerings', fn ($w) => $w->where('status', 'active'))->orderBy('sort')->get(),
+            'families' => ServiceFamily::whereHas('offerings', fn ($w) => $w->public())->orderBy('sort')->get(),
         ]);
     }
 
@@ -58,6 +62,12 @@ class SiteController extends Controller
     {
         if (isset(Offering::MOVED[$slug]) && ! Offering::public()->where('slug', $slug)->exists()) {
             return redirect()->route('services.show', Offering::MOVED[$slug], 301);
+        }
+        // Old online puja and chadhava pages now open the request form with that puja chosen.
+        $retired = Offering::with('translations')->where('slug', Offering::MOVED[$slug] ?? $slug)
+            ->whereHas('family', fn ($f) => $f->whereIn('code', PujaRequests::RETIRED_FAMILIES))->first();
+        if ($retired) {
+            return redirect()->route('puja-request.create', ['puja' => $retired->t('en')?->title ?? $retired->slug], 301);
         }
         $o = Offering::public()->with(['translations', 'variants', 'family'])->where('slug', $slug)->firstOrFail();
 

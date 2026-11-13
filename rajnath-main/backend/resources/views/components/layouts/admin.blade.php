@@ -88,6 +88,8 @@
                         @if ($roles !== '')<p class="px-3 pb-2"><span class="badge-gold">{{ $roles }}</span></p>@endif
                         <div class="menu-sep"></div>
                         <a href="{{ route('admin.dashboard') }}" class="menu-item" @if (request()->routeIs('admin.dashboard')) aria-current="page" @endif><x-icon name="home" />Dashboard</a>
+                        <a href="{{ route('admin.account.show') }}" class="menu-item" @if (request()->routeIs('admin.account*')) aria-current="page" @endif><x-icon name="user" />My account &amp; password</a>
+                        <a href="{{ route('admin.manual') }}" class="menu-item" @if (request()->routeIs('admin.manual')) aria-current="page" @endif><x-icon name="help" />User manual</a>
                         @if ($u->hasRole('practitioner'))
                             <a href="{{ route('admin.practice.show') }}" class="menu-item" @if (request()->routeIs('admin.practice*')) aria-current="page" @endif><x-icon name="practice" />My practice</a>
                         @endif
@@ -106,6 +108,13 @@
                 </div>
             </header>
             <main id="main" class="px-4 py-6 sm:px-6 lg:px-8 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+                @if (($u->password_must_change || ! $u->hasMfa()) && ! request()->routeIs('admin.account*'))
+                    <div role="alert" class="card mb-6 flex flex-wrap items-center justify-between gap-3 border-gold-200 bg-gold-50 px-4 py-3 text-sm text-ink-900">
+                        <p><strong>{{ $u->password_must_change ? 'Please choose your own password.' : 'Two-factor sign-in is off for your account.' }}</strong>
+                            {{ $u->password_must_change ? 'You are still using the password created for you.' : 'Turn it on to protect the admin even if your password leaks.' }}</p>
+                        <a href="{{ route('admin.account.show') }}" class="btn-primary min-h-9 px-4 text-xs">Open My account</a>
+                    </div>
+                @endif
                 @if (auth()->user()?->can('providers.manage') && ($aiProblem = \App\Domain\Assistant\AiHealth::problem()))
                     <div role="alert" class="card mb-6 flex flex-wrap items-center justify-between gap-3 border-gold-200 bg-gold-50 px-4 py-3 text-sm text-ink-900">
                         <p><strong>{{ $aiProblem['state'] === 'missing' ? 'AI assistant needs an API key.' : 'The AI key is not working, please check or change it.' }}</strong>

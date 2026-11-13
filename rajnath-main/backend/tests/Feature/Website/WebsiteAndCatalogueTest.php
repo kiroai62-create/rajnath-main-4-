@@ -44,7 +44,7 @@ class WebsiteAndCatalogueTest extends TestCase
     public function test_drafts_are_hidden_and_search_filters(): void
     {
         $this->get('/services/premium-personalized-kundli')->assertNotFound();
-        $this->get('/services/mahamrityunjay-puja')->assertNotFound();
+        $this->get('/services/mahamrityunjay-puja')->assertRedirect();   // pujas open the request form
         $slugs = fn ($r) => collect($r->viewData('offerings'))->pluck('slug');
         $this->assertTrue($slugs($this->get('/services?q=vastu'))->contains('vastu-consultation'));
         $this->assertFalse($slugs($this->get('/services?q=vastu'))->contains('numerology'));

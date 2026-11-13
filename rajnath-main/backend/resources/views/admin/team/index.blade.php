@@ -30,6 +30,14 @@
                                         @endforeach
                                         <button class="btn-outline">Save roles</button>
                                     </form>
+                                    @if (! $member->hasRole('owner') || auth()->user()->hasRole('owner'))
+                                    <form method="POST" action="{{ route('admin.team.password', $member) }}" class="mt-4 space-y-2 border-t border-ink-200/60 pt-3">
+                                        @csrf @method('PUT')
+                                        <x-field name="password" :id="'pw-'.$member->ref" label="New password" type="password" autocomplete="new-password" />
+                                        @if ($member->hasMfa())<label class="flex min-h-9 items-center gap-2 text-sm"><input type="checkbox" name="disable_mfa" value="1" class="size-4 accent-ink-900"> Turn off their two-factor sign-in (lost phone)</label>@endif
+                                        <button class="btn-outline">Reset password</button>
+                                    </form>
+                                    @endif
                                     @unless ($member->is(auth()->user()))
                                     <form method="POST" action="{{ route('admin.team.status', $member) }}" class="mt-3">
                                         @csrf @method('PUT')
@@ -49,6 +57,24 @@
         </section>
 
         @can('team.manage')
+        <div class="space-y-6">
+        <section aria-labelledby="add-h" class="card h-fit p-5">
+            <h2 id="add-h" class="text-base">Add staff member now</h2>
+            <p class="mt-1 text-xs text-ink-600">Choose their password yourself and share it privately. They are asked to change it at first sign-in and can turn on two-factor sign-in in My account.</p>
+            <form method="POST" action="{{ route('admin.team.store') }}" class="mt-4 space-y-4">
+                @csrf
+                <x-field name="name" id="add-name" label="Full name" required />
+                <x-field name="email" id="add-email" label="Email (used to sign in)" type="email" required />
+                <x-field name="password" id="add-password" label="Password" type="password" autocomplete="new-password" required hint="At least 12 characters with upper and lower case letters, a number and a symbol." />
+                <fieldset>
+                    <legend class="field-label">Roles</legend>
+                    @foreach ($roles as $role)
+                        <label class="flex min-h-9 items-center gap-2 text-sm"><input type="checkbox" name="roles[]" value="{{ $role }}" class="size-4 accent-ink-900"> {{ str_replace('_', ' ', $role) }}</label>
+                    @endforeach
+                </fieldset>
+                <button class="btn-primary w-full">Add staff member</button>
+            </form>
+        </section>
         <section aria-labelledby="invite-h" class="card h-fit p-5">
             <h2 id="invite-h" class="text-base">Invite staff member</h2>
             <form method="POST" action="{{ route('admin.team.invite') }}" class="mt-4 space-y-4">
@@ -76,6 +102,7 @@
                 </ul>
             @endif
         </section>
+        </div>
         @endcan
     </div>
 </x-layouts.admin>

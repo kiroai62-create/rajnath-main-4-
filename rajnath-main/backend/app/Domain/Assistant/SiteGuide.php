@@ -71,7 +71,7 @@ class SiteGuide
                 'kundli' => $this->tool($tools, 'kundli', 'Make your free Kundli (birth chart, Navamsa and Vimshottari dasha) with our calculator. For a full reading, Acharya Ji\'s Janma Kundli consultation and written reports are listed below.', 'kundli'),
                 'matching' => $this->tool($tools, 'kundli-matching', 'Our free Kundli Matching tool gives the 36-guna Ashtakoota score with a Manglik check for both partners. For a detailed marriage reading, book a compatibility consultation.', 'marriage compatibility'),
                 'numerology' => $this->tool($tools, 'numerology', 'Try our free numerology calculators: Mulank, Bhagyank, name number, Lo Shu grid, lucky dates and colours.', 'numerology'),
-                'puja' => $this->services($tools, $message, 'Acharya Ji\'s team performs pujas with full vidhi on a shubh muhurat, in your name and gotra, and shares photos in your account. Here are matching pujas:'),
+                'puja' => $this->pujaRequest(),
                 'vastu' => $this->services($tools, 'vastu', 'Vastu guidance is available online from your floor plan or with a site visit in Patna. Options:'),
                 'gems' => $this->store($tools, $message),
                 'payment' => $this->payment($tools),
@@ -173,6 +173,13 @@ class SiteGuide
             .'Hours: Mon–Wed and Fri–Sun, 8 AM–12 PM and 3 PM–7 PM (IST). Thursday closed.'."\n"
             .'Phone / WhatsApp: '.$this->brand('contact.phone').' · Email: '.$this->brand('contact.email')."\n"
             .'Consultations are also available by video or audio call from anywhere.';
+    }
+
+    /** Pujas are arranged on request: the visitor fills in the form and the team calls back. */
+    private function pujaRequest(): string
+    {
+        return 'Acharya Ji\'s team performs pujas with full vidhi on a shubh muhurat, in your name and gotra: online by live video, at your home or at a temple. '
+            .'Fill in the puja request form at '.route('puja-request.create').' with the puja, purpose and preferred date. The team calls you within one working day to fix the date, place and dakshina. Nothing is charged online.';
     }
 
     private function booking(AssistantTools $tools, string $message): string

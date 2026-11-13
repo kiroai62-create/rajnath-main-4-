@@ -68,4 +68,12 @@ return [
     ],
 
     'step_up_minutes' => (int) env('STEP_UP_MINUTES', 10),
+
+    // Admin created automatically on deploy (php artisan arj:ensure-admin, run by deploy/deploy.sh)
+    // when the site has no owner yet. Leave ADMIN_PASSWORD empty to get a random one printed once.
+    'bootstrap_admin' => [
+        'email' => env('ADMIN_EMAIL'),
+        'name' => env('ADMIN_NAME', 'Administrator'),
+        'password' => env('ADMIN_PASSWORD'),
+    ],
 ];

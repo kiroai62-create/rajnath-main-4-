@@ -70,9 +70,17 @@ class StaffAuthController extends Controller
         $data = $request->validate(['email' => ['required', 'email'], 'password' => ['required', 'string']]);
         $user = User::where('email', strtolower($data['email']))->first();
         $ok = $user && $user->password && Hash::check($data['password'], $user->password);
-        if (! $ok || ! $user->isActive() || ! $user->hasMfa() || $user->roles()->doesntExist()) {
+        if (! $ok || ! $user->isActive() || $user->roles()->doesntExist()) {
             $this->audit->record('staff.login_failed', null, ['email' => $data['email']], null, 'guest');
             throw ValidationException::withMessages(['email' => 'These credentials do not match an active staff account.']);
+        }
+        // Two-factor sign-in is optional per person (Admin › My account); with it on, a code is asked next.
+        if (! $user->hasMfa()) {
+            $this->completeLogin($request, $user);
+
+            return $user->password_must_change
+                ? redirect()->route('admin.account.show')->with('status', 'Welcome. Please choose your own password now.')
+                : redirect()->intended(route('admin.dashboard'));
         }
         $request->session()->regenerate();
         $request->session()->put('staff_pending', ['id' => $user->id, 'at' => now()->timestamp]);
@@ -136,10 +144,10 @@ class StaffAuthController extends Controller
     public function stepUp(Request $request): RedirectResponse
     {
         $user = $request->user();
-        $request->validate(['password' => ['required', 'string'], 'code' => ['required', 'string']]);
-        if (! Hash::check($request->input('password'), $user->password) || ! $this->mfa->verify($user, $request->input('code'))) {
+        $request->validate(['password' => ['required', 'string'], 'code' => [$user->hasMfa() ? 'required' : 'nullable', 'string']]);
+        if (! Hash::check($request->input('password'), $user->password) || ($user->hasMfa() && ! $this->mfa->verify($user, (string) $request->input('code')))) {
             $this->audit->record('staff.step_up_failed', $user, [], $user);
-            throw ValidationException::withMessages(['code' => 'Password or authenticator code is not valid.']);
+            throw ValidationException::withMessages([$user->hasMfa() ? 'code' : 'password' => $user->hasMfa() ? 'Password or authenticator code is not valid.' : 'The password is not correct.']);
         }
         $request->session()->put('step_up_at', now()->timestamp);
         $this->audit->record('staff.step_up', $user, [], $user);

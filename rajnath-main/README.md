@@ -38,12 +38,19 @@ This repository contains only the files needed to run and rebuild the platform.
    ```
    deploy/install.sh astrorajnathjha.com owner@your-email.com "Acharya Dr. Rajnath Jha"
    ```
-   It prints a one-time link (valid 30 minutes) to create the owner login with an authenticator app.
+   It creates the **admin account automatically** (owner, full access) and prints the sign-in email and a random
+   password once at the end. Sign in at `https://astrorajnathjha.com/staff/login`, then open **Admin › My account** to
+   choose your own password and turn on two-factor sign-in. Every later deploy keeps the existing admin. Forgot the
+   password? `docker compose -f deploy/docker-compose.yml exec app php artisan arj:ensure-admin --reset --email=<email>`.
+   The complete admin guide is in **Admin › User manual**.
    **Save a copy of `deploy/.env.production`** (it holds `APP_KEY`, which encrypts every key you enter in the admin).
 6. **Enter the keys in the admin** (`https://astrorajnathjha.com/admin`):
    - Email & SMS (SMTP, Twilio / Fast2SMS) → press *Send test*
    - Payments setup (Razorpay keys, GSTIN, Shiprocket, RazorpayX)
-   - AI assistant (Groq / Gemini / Cloudflare / OpenAI key) and switch it on
+   - AI assistant (Groq / Gemini / Cloudflare / OpenAI key) and switch it on. The same key translates the website
+   - Languages: visitors choose English (default), Hindi, Bengali, Marathi, Telugu, Tamil, Gujarati, Urdu or Kannada from
+     the globe button on every page; press *Translate the whole website now* once the AI key is saved
+   - Puja requests: online puja and chadhava are replaced by a request form (`/puja`); the team fixes the date here
    - Push notifications (Firebase), Calling (LiveKit / Zoom / Google Meet)
 7. **Before going live:** publish the Refund and Shipping policies (Admin › Legal pages), set real stock
    (Admin › Store), and check the office hours (Admin › Bookings).

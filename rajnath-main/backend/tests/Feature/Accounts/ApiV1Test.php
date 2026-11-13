@@ -17,7 +17,11 @@ class ApiV1Test extends TestCase
     private function code(): string
     {
         $c = null;
-        Mail::assertSent(OtpMail::class, function ($m) use (&$c) { $c = $m->code; return true; });
+        Mail::assertSent(OtpMail::class, function ($m) use (&$c) {
+            $c = $m->code;
+
+            return true;
+        });
 
         return $c;
     }
@@ -127,7 +131,8 @@ class ApiV1Test extends TestCase
     {
         $this->seed(CatalogueSeeder::class);
         $list = $this->getJson('/api/v1/catalogue/offerings')->assertOk()->json('data');
-        $this->assertCount(13, $list);
+        $this->assertCount(12, $list, 'online puja is no longer listed');
+        $this->assertNotContains('puja-rituals', array_column($list, 'slug'));
         $this->assertNotContains('premium-personalized-kundli', array_column($list, 'slug'));
         $this->getJson('/api/v1/catalogue/offerings/premium-personalized-kundli')->assertNotFound()->assertJsonPath('error.code', 'not_found');
         $this->getJson('/api/v1/catalogue/offerings/janma-kundali-reading')->assertOk()->assertJsonPath('data.title', 'Janma Kundali Reading')

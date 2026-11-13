@@ -62,8 +62,9 @@ class ServiceContentTest extends TestCase
         $this->assertSame(46, $live('puja'));
         $this->assertSame(7, $live('chadhava'));
         $this->assertSame(1, DB::table('suppliers')->where('authorization_doc', 'in-house')->count());
-        $this->get('/services/rudrabhishek')->assertOk()->assertSee('Rudrabhishek');
-        $this->get('/services?family=chadhava')->assertOk()->assertSee('Shani Grah Chadhava');
+        // still not sold on the website: pujas are arranged through the request form
+        $this->get('/services/rudrabhishek')->assertRedirect(route('puja-request.create', ['puja' => 'Rudrabhishek']));
+        $this->get('/services?family=chadhava')->assertRedirect(route('puja-request.create'));
 
         // the owner switches one off; a later deploy leaves it off
         DB::table('offerings')->where('slug', 'rudrabhishek')->update(['status' => 'draft']);

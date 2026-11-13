@@ -8,6 +8,7 @@ use App\Domain\Reports\ReportJobs;
 use App\Domain\Support\Tickets;
 use App\Http\Controllers\Controller;
 use App\Models\BirthProfile;
+use App\Models\PujaRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -32,7 +33,7 @@ class CustomerOpsController extends Controller
     // ---------- Puja ----------
     public function pujaIndex(Request $r): View
     {
-        return view('account.puja.index', ['rows' => DB::table('puja_bookings as p')->join('offering_translations as t', fn ($j) => $j->on('t.offering_id', '=', 'p.offering_id')->where('t.locale', 'en'))
+        return view('account.puja.index', ['requests' => PujaRequest::where('user_id', $r->user()->id)->orderByDesc('id')->get(), 'rows' => DB::table('puja_bookings as p')->join('offering_translations as t', fn ($j) => $j->on('t.offering_id', '=', 'p.offering_id')->where('t.locale', 'en'))
             ->where('p.user_id', $r->user()->id)->select('p.*', 't.title')->orderByDesc('p.id')->get()]);
     }
 

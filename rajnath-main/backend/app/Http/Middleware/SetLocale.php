@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\Settings\SettingsRepository;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
@@ -38,18 +39,30 @@ class SetLocale
         return $next($request);
     }
 
-    /** @return list<string> */
     /** True when more than English is switched on (admin shows the translation fields only then). */
     public static function multilingual(): bool
     {
         return count(self::enabled()) > 1;
     }
 
+    /**
+     * Languages offered to visitors, English first. The owner's choice in Admin › Languages
+     * (setting "site.locales") wins over SITE_LOCALES.
+     *
+     * @return list<string>
+     */
     public static function enabled(): array
     {
         $all = array_keys(config('locales.available'));
-        $on = array_values(array_intersect(config('locales.enabled') ?: ['en'], $all));
+        $saved = rescue(fn () => app(SettingsRepository::class)->get('site.locales'), null, false);
+        $wanted = is_array($saved) ? $saved : (config('locales.enabled') ?: ['en']);
+        $on = array_values(array_intersect($all, $wanted));
 
         return in_array('en', $on, true) ? $on : ['en', ...$on];
+    }
+
+    public static function rtl(string $locale): bool
+    {
+        return in_array($locale, config('locales.rtl', []), true);
     }
 }

@@ -5,6 +5,7 @@ namespace App\Domain\Content;
 use App\Domain\Astro\Gochar;
 use App\Domain\Astro\Vedic;
 use App\Http\Controllers\Web\ContentController;
+use App\Http\Middleware\SetLocale;
 use Carbon\CarbonImmutable;
 use DateTimeImmutable;
 use DateTimeZone;
@@ -262,7 +263,7 @@ class GocharRashifal
     /** Languages written for a kind: Hindi only for Moon-sign Rashifal (the other kinds are English). */
     private function locales(string $kind): array
     {
-        $enabled = config('locales.enabled', ['en']) ?: ['en'];
+        $enabled = SetLocale::enabled();
         $out = array_values(array_intersect(['en', 'hi'], $enabled)) ?: ['en'];
 
         return $kind === 'rashi' ? $out : array_values(array_intersect($out, ['en']));

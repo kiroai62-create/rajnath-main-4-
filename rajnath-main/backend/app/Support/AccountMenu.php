@@ -13,7 +13,7 @@ class AccountMenu
     public const ITEMS = [
         ['label' => 'Overview', 'route' => 'account.dashboard', 'icon' => 'home', 'primary' => true, 'header' => true],
         ['label' => 'Bookings', 'route' => 'account.bookings', 'icon' => 'calendar', 'primary' => true, 'header' => true],
-        ['label' => 'Puja', 'route' => 'account.puja.index', 'icon' => 'flame', 'primary' => true, 'header' => true],
+        ['label' => 'Puja requests', 'route' => 'account.puja.index', 'icon' => 'flame', 'primary' => true, 'header' => true],
         ['label' => 'Reports', 'route' => 'account.reports.index', 'icon' => 'doc', 'primary' => true, 'header' => true],
         ['label' => 'Orders', 'route' => 'account.orders', 'icon' => 'bag', 'primary' => true, 'header' => true],
         ['label' => 'Wallet', 'route' => 'account.wallet', 'icon' => 'wallet', 'primary' => true, 'header' => true],

@@ -38,6 +38,7 @@ class DashboardController extends Controller
             'series' => $series,
             'attention' => array_values(array_filter([
                 ['New enquiries', DB::table('enquiries')->where('status', 'new')->count(), 'admin.enquiries.index', 'bookings.view'],
+                ['New puja requests', DB::table('puja_requests')->where('status', 'new')->count(), 'admin.puja-requests.index', 'bookings.view'],
                 ['Support requests open', DB::table('tickets')->whereIn('status', ['open', 'waiting_staff'])->count(), 'admin.ops.tickets', 'support.view'],
                 ['Pujas to schedule', DB::table('puja_bookings')->whereIn('status', ['requested', 'awaiting_details'])->count(), 'admin.ops.pujas', 'puja.fulfil'],
                 ['Reports to write', DB::table('report_jobs')->whereNotIn('status', ['completed', 'cancelled'])->count(), 'admin.ops.reports', 'reports.fulfil'],

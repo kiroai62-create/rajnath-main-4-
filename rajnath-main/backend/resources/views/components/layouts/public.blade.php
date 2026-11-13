@@ -51,12 +51,12 @@
                     <x-dropdown id="lang-menu" width="w-56" :label="__('Language').': '.($langNames[$curLang] ?? $curLang)" button-class="btn-ghost gap-1.5 px-2.5 text-sm">
                         <x-slot:trigger>
                             <x-icon name="globe" />
-                            <span class="hidden 2xl:inline">{{ $langNames[$curLang] ?? $curLang }}</span>
-                            <span class="font-semibold uppercase 2xl:hidden">{{ $curLang }}</span>
+                            <span class="hidden 2xl:inline" translate="no">{{ $langNames[$curLang] ?? $curLang }}</span>
+                            <span class="font-semibold uppercase 2xl:hidden" translate="no">{{ $curLang }}</span>
                         </x-slot:trigger>
                         <p class="menu-label">{{ __('Language') }}</p>
                         @foreach ($langs as $l)
-                            <a href="{{ request()->fullUrlWithQuery(['lang' => $l]) }}" lang="{{ $l }}" hreflang="{{ $l }}" class="menu-item" @if ($l === $curLang) aria-current="true" @endif>
+                            <a href="{{ request()->fullUrlWithQuery(['lang' => $l]) }}" lang="{{ $l }}" hreflang="{{ $l }}" class="menu-item" @if ($l === $curLang) aria-current="true" @endif translate="no">
                                 <span class="flex-1">{{ $langNames[$l] ?? $l }}</span>
                                 @if ($l === $curLang)<x-icon name="check" class="size-4 text-gold-700" />@endif
                             </a>

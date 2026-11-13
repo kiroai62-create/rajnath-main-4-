@@ -18,6 +18,9 @@ Route::get('/services', [Web\SiteController::class, 'services'])->name('services
 Route::get('/services/{slug}', [Web\SiteController::class, 'service'])->name('services.show');
 Route::post('/enquiries', [Web\SiteController::class, 'enquire'])->middleware('throttle:enquiry')->name('enquiries.store');
 Route::get('/enquiries/{ref}/received', [Web\SiteController::class, 'thanks'])->name('enquiry.thanks');
+Route::get('/puja', [Web\PujaRequestController::class, 'create'])->name('puja-request.create');
+Route::post('/puja', [Web\PujaRequestController::class, 'store'])->middleware('throttle:enquiry')->name('puja-request.store');
+Route::get('/puja/{ref}/received', [Web\PujaRequestController::class, 'thanks'])->name('puja-request.thanks');
 Route::get('/faq', [Web\SiteController::class, 'faq'])->name('faq');
 Route::get('/rashifal', [Web\ContentController::class, 'rashifal'])->name('rashifal');
 Route::get('/rashifal/{kind}', [Web\ContentController::class, 'rashifal'])->whereIn('kind', ['nakshatra', 'chinese', 'numerology', 'tarot'])->name('rashifal.kind');
@@ -173,6 +176,14 @@ Route::prefix('staff')->name('staff.')->controller(StaffAuthController::class)->
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'staff'])->group(function () {
     Route::post('ai/assist', Admin\AiAssistController::class)->middleware('throttle:admin-ai')->name('ai.assist');
     Route::get('/', Admin\DashboardController::class)->name('dashboard');
+    Route::view('manual', 'admin.manual')->name('manual');
+    Route::controller(Admin\AccountController::class)->prefix('account')->name('account.')->group(function () {
+        Route::get('/', 'show')->name('show');
+        Route::put('profile', 'updateProfile')->middleware('throttle:staff-login')->name('profile');
+        Route::put('password', 'updatePassword')->middleware('throttle:staff-login')->name('password');
+        Route::post('mfa', 'enableMfa')->middleware('throttle:staff-mfa')->name('mfa.enable');
+        Route::delete('mfa', 'disableMfa')->middleware('throttle:staff-mfa')->name('mfa.disable');
+    });
 
     Route::get('team', [Admin\TeamController::class, 'index'])->name('team.index');
     Route::get('settings', [Admin\SettingsController::class, 'edit'])->name('settings.edit');
@@ -223,6 +234,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'staff'])->group(fun
     Route::get('enquiries/{enquiry}', [Admin\EnquiryController::class, 'show'])->name('enquiries.show');
     Route::put('enquiries/{enquiry}', [Admin\EnquiryController::class, 'update'])->name('enquiries.update');
 
+    Route::controller(Admin\PujaRequestController::class)->prefix('puja-requests')->name('puja-requests.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('export', 'export')->name('export');
+        Route::put('settings', 'settings')->name('settings');
+        Route::get('{pujaRequest}', 'show')->name('show');
+        Route::put('{pujaRequest}', 'update')->name('update');
+    });
+
     Route::get('customers', [Admin\CustomerController::class, 'index'])->name('customers.index');
     Route::get('customers/{customer}', [Admin\CustomerController::class, 'show'])->name('customers.show');
     Route::put('customers/{customer}/status', [Admin\CustomerController::class, 'setStatus'])->name('customers.status');
@@ -268,6 +287,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'staff'])->group(fun
         Route::post('rashifal', 'saveHoroscope')->name('ops.horoscope');
         Route::post('rashifal/{id}/decision', 'decideHoroscope')->whereNumber('id')->name('ops.horoscope.decide');
     });
+    Route::get('languages', [Admin\LanguageController::class, 'index'])->name('languages.index');
+    Route::post('languages/translate', [Admin\LanguageController::class, 'translate'])->middleware('throttle:provider-test')->name('languages.translate');
+    Route::post('languages/scan', [Admin\LanguageController::class, 'scan'])->middleware('throttle:provider-test')->name('languages.scan');
+    Route::put('languages/lines/{id}', [Admin\LanguageController::class, 'saveLine'])->whereNumber('id')->name('languages.line');
     Route::get('faqs', [Admin\FaqController::class, 'index'])->name('faqs.index');
     Route::post('faqs', [Admin\FaqController::class, 'save'])->name('faqs.save');
     Route::delete('faqs/{id}', [Admin\FaqController::class, 'destroy'])->whereNumber('id')->name('faqs.destroy');
@@ -322,10 +345,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'staff'])->group(fun
         Route::post('commission/{id}/decision', [Admin\PractitionerController::class, 'decideCommission'])->whereNumber('id')->name('practitioners.commission.decide');
         Route::post('payouts/{ref}', [Admin\PractitionerController::class, 'payoutAction'])->name('payouts.action');
         Route::post('team/invitations', [Admin\TeamController::class, 'invite'])->name('team.invite');
+        Route::post('team/members', [Admin\TeamController::class, 'store'])->name('team.store');
+        Route::put('team/{user}/password', [Admin\TeamController::class, 'resetPassword'])->name('team.password');
         Route::delete('team/invitations/{ref}', [Admin\TeamController::class, 'revokeInvitation'])->name('team.invitations.revoke');
         Route::put('team/{user}/roles', [Admin\TeamController::class, 'updateRoles'])->name('team.roles');
         Route::put('team/{user}/status', [Admin\TeamController::class, 'setStatus'])->name('team.status');
         Route::put('settings', [Admin\SettingsController::class, 'update'])->name('settings.update');
+        Route::put('languages', [Admin\LanguageController::class, 'update'])->name('languages.update');
         Route::post('legal/{kind}/{locale}/publish', [Admin\LegalController::class, 'publish'])->name('legal.publish');
         Route::post('legal/{kind}/{locale}/unpublish', [Admin\LegalController::class, 'unpublish'])->name('legal.unpublish');
         Route::put('providers/mail', [Admin\ProvidersController::class, 'updateMail'])->name('providers.mail');

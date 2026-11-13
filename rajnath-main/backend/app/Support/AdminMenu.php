@@ -10,9 +10,12 @@ class AdminMenu
     public const GROUPS = [
         'Overview' => [
             ['Dashboard', 'admin.dashboard', null, 'home'],
+            ['My account', 'admin.account.show', null, 'user'],
+            ['User manual', 'admin.manual', null, 'help'],
         ],
         'Customers' => [
             ['Enquiries', 'admin.enquiries.index', 'bookings.view', 'inbox'],
+            ['Puja requests', 'admin.puja-requests.index', 'bookings.view', 'flame'],
             ['Bookings & hours', 'admin.ops.bookings', 'bookings.view', 'calendar'],
             ['Support', 'admin.ops.tickets', 'support.view', 'chat'],
             ['Customers', 'admin.customers.index', 'customers.view', 'users'],
@@ -20,7 +23,7 @@ class AdminMenu
             ['Privacy requests', 'admin.privacy.index', 'privacy.handle', 'shield'],
         ],
         'Fulfilment' => [
-            ['Puja bookings', 'admin.ops.pujas', 'puja.fulfil', 'flame'],
+            ['Old puja bookings', 'admin.ops.pujas', 'puja.fulfil', 'flame'],
             ['Priests & temples', 'admin.ops.suppliers', 'suppliers.manage', 'temple'],
             ['Reports to write', 'admin.ops.reports', 'reports.fulfil', 'doc'],
             ['Palmistry', 'admin.palm.index', 'reports.fulfil', 'hand'],
@@ -33,6 +36,7 @@ class AdminMenu
         ],
         'Website' => [
             ['Website & home page', 'admin.website.edit', 'content.publish', 'layout'],
+            ['Languages', 'admin.languages.index', 'content.publish', 'globe'],
             ['Mobile app', 'admin.app.edit', 'content.publish', 'devices'],
             ['Push messages', 'admin.broadcast.index', 'content.publish', 'bell'],
             ['About & awards', 'admin.profile.edit', 'content.author', 'award'],

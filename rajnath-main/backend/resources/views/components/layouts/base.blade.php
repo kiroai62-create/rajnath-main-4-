@@ -7,11 +7,11 @@
     $langs = \App\Http\Middleware\SetLocale::enabled();
     // Canonical: the clean path, plus ?lang for a non-English page; other query strings are dropped.
     $langUrl = fn (string $l) => $l === 'en' ? url()->current() : url()->current().'?lang='.$l;
-    $ogLocale = ['en' => 'en_IN', 'hi' => 'hi_IN', 'bn' => 'bn_IN', 'gu' => 'gu_IN', 'kn' => 'kn_IN', 'ml' => 'ml_IN', 'mr' => 'mr_IN', 'pa' => 'pa_IN', 'ta' => 'ta_IN', 'te' => 'te_IN'];
+    $ogLocale = ['en' => 'en_IN', 'hi' => 'hi_IN', 'bn' => 'bn_IN', 'gu' => 'gu_IN', 'kn' => 'kn_IN', 'ml' => 'ml_IN', 'mr' => 'mr_IN', 'pa' => 'pa_IN', 'ta' => 'ta_IN', 'te' => 'te_IN', 'ur' => 'ur_IN'];
     $img = asset($image ?? 'images/brand/og-default.jpg');
 @endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', $locale) }}">
+<html lang="{{ str_replace('_', '-', $locale) }}"{!! \App\Http\Middleware\SetLocale::rtl($locale) ? ' dir="rtl"' : '' !!}>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">

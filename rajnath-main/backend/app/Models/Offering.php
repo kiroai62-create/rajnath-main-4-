@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Domain\Payments\ServiceDetails;
+use App\Domain\Puja\PujaRequests;
 use App\Domain\Reports\ReportJobs;
 use App\Support\BookingSteps;
 use Illuminate\Database\Eloquent\Builder;
@@ -56,9 +57,14 @@ class Offering extends Model
         return $this->belongsToMany(Offering::class, 'bundle_items', 'bundle_offering_id', 'item_offering_id');
     }
 
+    /**
+     * Offerings visitors can see and buy. Online puja and chadhava are no longer sold: those
+     * families are replaced by the "Puja on request" form (App\Domain\Puja\PujaRequests).
+     */
     public function scopePublic(Builder $q): Builder
     {
-        return $q->where('status', 'active');
+        return $q->where('status', 'active')
+            ->whereDoesntHave('family', fn (Builder $f) => $f->whereIn('code', PujaRequests::RETIRED_FAMILIES));
     }
 
     public function t(?string $locale = null): ?OfferingTranslation

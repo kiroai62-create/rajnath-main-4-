@@ -14,8 +14,7 @@
         @foreach ([
             ['kundli', __('Free Kundli'), __('Birth chart, Navamsa and dasha in seconds.'), route('tools.show', 'kundli')],
             ['kundli-matching', __('Kundli matching'), __('36-guna milan with Manglik check.'), route('tools.show', 'kundli-matching')],
-            ['family-puja', __('Online puja'), __('Sankalp in your name, performed on a shubh muhurat.'), route('services.index', ['family' => 'puja'])],
-            ['family-chadhava', __('Chadhava'), __('Offerings at temples on your behalf.'), route('services.index', ['family' => 'chadhava'])],
+            ['family-puja', __('Puja on request'), __('Tell us the puja you need; we call you to fix the muhurat.'), route('puja-request.create')],
             ['gems', __('Gemstones and samagri'), __('Certified stones, rudraksha, yantra and pooja kits.'), route('store.index')],
             ['panchang', __('Panchang'), __('Tithi, nakshatra, Rahu Kaal, Choghadiya and Hora.'), route('panchang')],
             ['muhurat', __('Shubh muhurat'), __('Dates for vivah, griha pravesh, mundan and more.'), route('muhurat.index')],

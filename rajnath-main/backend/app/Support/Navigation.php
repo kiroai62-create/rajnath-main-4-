@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Domain\Astro\Vedic;
 use App\Domain\Legal\LegalDocuments;
+use App\Domain\Puja\PujaRequests;
 use App\Domain\Showcase\Profile;
 use App\Domain\Store\Store;
 use App\Http\Controllers\Web\ContentController;
@@ -58,8 +59,6 @@ class Navigation
         $consult = self::offerings(['consultation', 'vastu', 'written_question'], 10);
         $reports = self::offerings(['report'], 12);
         $bundles = self::offerings(['bundle'], 5);
-        $pujas = self::offerings(['puja'], 9);
-        $chadhava = self::offerings(['chadhava'], 6);
         $remedies = self::offerings(['remedy'], 4);
         $signs = ContentController::signSlugs();
         $signNames = array_map(fn ($s) => strtok($s, ' '), Vedic::SIGNS);
@@ -89,17 +88,19 @@ class Navigation
                     'href' => route('services.show', 'premium-personalized-kundli'), 'cta' => ($p = self::price('premium-personalized-kundli')) ? __('Get it for :price', ['price' => $p]) : __('See details')],
             ],
             [
-                'key' => 'puja', 'label' => __('Puja & remedies'), 'href' => route('services.index', ['family' => 'puja']),
+                'key' => 'puja', 'label' => __('Puja & remedies'), 'href' => route('puja-request.create'),
                 'columns' => array_values(array_filter([
-                    $pujas->isEmpty() ? null : [__('Online puja'), array_merge(self::links($pujas->take(7)), [[__('All pujas'), route('services.index', ['family' => 'puja']), null]])],
-                    $chadhava->isEmpty() ? null : [__('Chadhava'), array_merge(self::links($chadhava->take(5)), [[__('All chadhava'), route('services.index', ['family' => 'chadhava']), null]])],
+                    [__('Puja on request'), array_merge(
+                        [[__('Request a puja'), route('puja-request.create'), __('Tell us what you need; we call you to fix the date')]],
+                        array_map(fn ($t) => [__($t), route('puja-request.create', ['puja' => $t]), null], array_slice(app(PujaRequests::class)->types(), 0, 6)),
+                    )],
                     [__('Gems and samagri'), array_merge(
                         array_map(fn ($k) => [__(Store::CATEGORIES[$k]), route('store.index', ['category' => $k]), null], ['gemstone', 'rudraksha', 'yantra', 'mala', 'kit']),
                         self::links($remedies->take(3)),
                     )],
                 ])),
-                'feature' => ['img' => 'images/art/family-puja.jpg', 'title' => __('Puja in your name'), 'text' => __('Sankalp with your name and gotra on a shubh muhurat, with photos in your account.'),
-                    'href' => route('services.index', ['family' => 'puja']), 'cta' => __('Choose a puja')],
+                'feature' => ['img' => 'images/art/family-puja.jpg', 'title' => __('Puja on request'), 'text' => __('Fill in one short form. Acharya Ji\'s team calls you to fix the muhurat, place and dakshina.'),
+                    'href' => route('puja-request.create'), 'cta' => __('Request a puja')],
             ],
             [
                 'key' => 'horoscope', 'label' => __('Horoscope'), 'href' => route('rashifal'),

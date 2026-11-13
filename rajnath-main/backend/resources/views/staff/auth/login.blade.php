@@ -5,5 +5,5 @@
         <x-field name="password" label="Password" type="password" autocomplete="current-password" required />
         <button class="btn-primary w-full">Continue</button>
     </form>
-    <p class="mt-6 text-xs text-ink-600">Staff access only. Every sign-in requires an authenticator code and is recorded in the audit log.</p>
+    <p class="mt-6 text-xs text-ink-600">Staff access only. If two-factor sign-in is on for your account you will be asked for the authenticator code next. Every sign-in is recorded in the audit log.</p>
 </x-layouts.auth>

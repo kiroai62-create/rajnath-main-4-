@@ -43,12 +43,18 @@ class CatalogueRevisionTest extends TestCase
         $this->get('/services/lal-kitab-report')->assertNotFound();
         $this->get('/services/santan-badha-puja')->assertRedirect('/services/santan-prapti-puja');
         $this->get('/services/palmistry-photo-report')->assertRedirect('/services/palmistry');
-        $this->get('/services/santan-prapti-puja')->assertOk()->assertSee('Santan Prapti Puja');
-        $this->get('/services/shatru-badha-puja')->assertOk()->assertSee('Shatru Badha Puja');
-        $this->get('/services/nasha-mukti-puja')->assertOk()->assertSee('Nasha Mukti Puja');
+        // pujas are no longer sold online: their pages open the puja request form with the puja chosen
+        $this->get('/services/santan-prapti-puja')->assertRedirect(route('puja-request.create', ['puja' => 'Santan Prapti Puja']));
+        $this->get('/services/shatru-badha-puja')->assertRedirect(route('puja-request.create', ['puja' => 'Shatru Badha Puja']));
+        $this->get('/services/nasha-mukti-puja')->assertRedirect(route('puja-request.create', ['puja' => 'Nasha Mukti Puja']));
 
         foreach (array_keys(CatalogueRevisionSeeder::newServices()) as $slug) {
-            $this->get("/services/$slug")->assertOk()->assertSee('How it is done')->assertSee('How booking works');
+            $family = Offering::with('family')->where('slug', $slug)->first()->family->code;
+            if (in_array($family, ['puja', 'chadhava'], true)) {
+                $this->get("/services/$slug")->assertRedirect();   // pujas are arranged through the request form
+            } else {
+                $this->get("/services/$slug")->assertOk()->assertSee('How it is done')->assertSee('How booking works');
+            }
         }
         $this->assertSame('active', Offering::where('slug', 'kaal-sarp-dosh-nivaran-puja')->value('status'));
 

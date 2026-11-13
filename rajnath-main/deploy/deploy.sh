@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Update (and first deploy): backup → build → migrate → seed → restart → health check.
+# Update (and first deploy): backup → build → migrate → seed → admin account → restart → health check.
 # Rollback: deploy/deploy.sh <previous-git-tag>
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -8,6 +8,11 @@ REF=${1:-}
 ln -sfn .env.production deploy/.env     # docker compose reads ${DOMAIN} etc. from deploy/.env
 grep -q '^APP_KEY=base64:' deploy/.env.production || { echo "APP_KEY is empty in deploy/.env.production"; exit 1; }
 if grep -q 'change-me' deploy/.env.production; then echo "Replace the change-me passwords in deploy/.env.production"; exit 1; fi
+# Older installs listed English only; offer all nine languages (change them later in Admin › Languages).
+if grep -q '^SITE_LOCALES=en$' deploy/.env.production; then
+  sed -i 's/^SITE_LOCALES=en$/SITE_LOCALES=en,hi,bn,mr,te,ta,gu,ur,kn/' deploy/.env.production
+  echo "Website languages switched on: English, Hindi, Bengali, Marathi, Telugu, Tamil, Gujarati, Urdu, Kannada."
+fi
 DC="docker compose -f deploy/docker-compose.yml"
 PROFILES=""
 grep -q '^LIVEKIT_API_KEY=.\+' deploy/.env.production && PROFILES="--profile calls"
@@ -19,6 +24,8 @@ $DC up -d db redis
 $DC run --rm public-sync
 $DC run --rm app php artisan migrate --force
 $DC run --rm app php artisan db:seed --force   # idempotent safe seed (roles, places, catalogue, Hindi text)
+# Creates the admin (owner, full access) only when there is none yet; prints the sign-in details once.
+$DC run --rm app php artisan arj:ensure-admin
 $DC $PROFILES up -d --remove-orphans
 DOMAIN=$(grep ^DOMAIN= deploy/.env.production | cut -d= -f2)
 for i in $(seq 1 30); do
