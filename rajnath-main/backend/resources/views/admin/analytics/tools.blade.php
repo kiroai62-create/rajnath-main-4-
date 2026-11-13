@@ -1,14 +1,14 @@
-@php $T = \App\Domain\Astro\Tools::TOOLS; $C = \App\Http\Controllers\Admin\AnalyticsController::class; @endphp
+@php $T = \App\Domain\Analytics\ToolHistory::allTools(); $C = \App\Http\Controllers\Admin\AnalyticsController::class; @endphp
 <x-layouts.admin title="Free tools analytics">
     @include('admin.analytics._range')
 
-    <div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        @foreach ([['Calculations made', $sum['runs']], ['People', $sum['people']], ['PDFs downloaded', $sum['pdfs']], ['Kundlis made', $sum['kundli']], ['Kundli matchings', $sum['matching']]] as [$l, $v])
+    <div class="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
+        @foreach ([['Calculations made', $sum['runs']], ['Panchang, muhurat & other lookups', $sum['lookups']], ['People', $sum['people']], ['PDFs downloaded', $sum['pdfs']], ['Kundlis made', $sum['kundli']], ['Kundli matchings', $sum['matching']]] as [$l, $v])
             <div class="card p-4"><p class="text-xs text-ink-600">{{ $l }}</p><p class="mt-1 text-2xl font-semibold tabular-nums">{{ number_format($v) }}</p></div>
         @endforeach
     </div>
 
-    <div class="mt-6">@include('admin.analytics._bars', ['title' => 'Calculations per day'.(! empty($filters['tool']) ? ' — '.$T[$filters['tool']][0] : ''), 'a' => 'calculations', 'b' => 'PDFs'])</div>
+    <div class="mt-6">@include('admin.analytics._bars', ['title' => 'Calculations per day'.(! empty($filters['tool']) ? ' — '.$T[$filters['tool']] : ''), 'a' => 'calculations', 'b' => 'PDFs'])</div>
 
     <div class="mt-6 grid gap-6 xl:grid-cols-[1fr_22rem]">
         <section class="card min-w-0 p-5" aria-labelledby="per-tool-h">
@@ -18,7 +18,7 @@
                 <tbody>
                 @forelse ($totals as $t)
                     <tr>
-                        <td><a href="{{ route('admin.analytics.tools', request()->only('days', 'from', 'to') + ['tool' => $t->tool]) }}">{{ $T[$t->tool][0] ?? $t->tool }}</a>@if (in_array($t->tool, $pdfOff, true)) <span class="badge-ink">PDF off</span>@endif</td>
+                        <td><a href="{{ route('admin.analytics.tools', request()->only('days', 'from', 'to') + ['tool' => $t->tool]) }}">{{ $T[$t->tool] ?? $t->tool }}</a>@if (in_array($t->tool, $pdfOff, true)) <span class="badge-ink">PDF off</span>@endif</td>
                         <td class="text-right tabular-nums">{{ number_format($t->runs) }}</td><td class="text-right tabular-nums">{{ number_format($t->people) }}</td>
                         <td class="text-right tabular-nums">{{ number_format($t->pdfs) }}</td><td class="text-right tabular-nums">{{ number_format($t->web) }}</td>
                         <td class="text-right tabular-nums">{{ number_format($t->app) }}</td><td class="text-right tabular-nums">{{ number_format($t->signed_in) }}</td>
@@ -32,13 +32,15 @@
         @include('admin.analytics._list', ['rows' => $countries, 'title' => 'Countries', 'label' => 'Country', 'nLabel' => 'Made', 'format' => fn ($k) => $C::countryName($k)])
     </div>
 
+    <div class="mt-6">@include('admin.analytics._list', ['rows' => $pages, 'title' => 'Free pages viewed (Rashifal, Panchang, Gochar …)', 'label' => 'Page', 'format' => fn ($k) => $C::FREE_PAGES[$k] ?? $k])</div>
+
     <section class="mt-8" aria-labelledby="hist-h">
         <div class="flex flex-wrap items-end justify-between gap-3">
             <h2 id="hist-h" class="text-lg">History</h2>
             @if ($history)
             <form method="GET" class="flex flex-wrap items-end gap-2">
                 @foreach (request()->only('days', 'from', 'to') as $k => $v)<input type="hidden" name="{{ $k }}" value="{{ $v }}">@endforeach
-                <x-select name="tool" label="Calculator" :value="$filters['tool'] ?? ''" :options="['' => 'All'] + collect($T)->map(fn ($t) => $t[0])->all()" />
+                <x-select name="tool" label="Calculator" :value="$filters['tool'] ?? ''" :options="['' => 'All'] + $T" />
                 <x-select name="channel" label="From" :value="$filters['channel'] ?? ''" :options="['' => 'Website and app', 'web' => 'Website', 'app' => 'App']" />
                 <label class="flex min-h-10 items-center gap-2 text-sm"><input type="checkbox" name="pdf" value="1" @checked(! empty($filters['pdf'])) class="size-4 accent-ink-900"> PDF downloaded</label>
                 <button class="btn-outline min-h-10">Filter</button>
@@ -55,7 +57,7 @@
             @forelse ($history as $run)
                 <tr>
                     <td class="whitespace-nowrap"><a href="{{ route('admin.analytics.tools.show', $run) }}">{{ $run->created_at->tz('Asia/Kolkata')->format('d M, g:i A') }}</a></td>
-                    <td>{{ $T[$run->tool][0] ?? $run->tool }}</td>
+                    <td>{{ $T[$run->tool] ?? $run->tool }}</td>
                     <td class="max-w-sm text-sm">{{ \Illuminate\Support\Str::limit($run->personLine(), 120) }}@if ($run->user)<br><a href="{{ route('admin.customers.show', $run->user) }}" class="text-xs">Customer: {{ $run->user->name ?: $run->user->phone_e164 }}</a>@endif</td>
                     <td class="max-w-xs text-xs text-ink-600">{{ $run->summary }}</td>
                     <td class="whitespace-nowrap text-xs">{{ $run->channel === 'app' ? 'App' : 'Website' }} · {{ ucfirst($run->device ?? '') }}<br>{{ $C::countryName($run->country) }}</td>

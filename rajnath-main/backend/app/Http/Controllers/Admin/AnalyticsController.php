@@ -25,6 +25,14 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 /** Admin › Analytics: website visitors and clicks, free-calculator use and history, and the mobile app. */
 class AnalyticsController extends Controller
 {
+    /** Free pages that are read rather than calculated (counted from page views). */
+    public const FREE_PAGES = [
+        'rashifal' => 'Rashifal', 'rashifal.kind' => 'Nakshatra / Chinese / Numerology / Tarot horoscope', 'rashi' => 'Rashi (sign) pages',
+        'gochar' => 'Grah gochar', 'gochar.planet' => 'Gochar planet pages', 'navagraha' => 'The nine planets', 'muhurat.index' => 'Shubh muhurat list',
+        'muhurat.show' => 'Muhurat by ceremony', 'festivals' => 'Festivals', 'calendar' => 'Vrat calendar', 'panchang' => 'Panchang',
+        'tools.index' => 'All calculators', 'tools.show' => 'Calculator pages (opened)', 'learn' => 'Learn Jyotish',
+    ];
+
     public const RANGES = [1 => 'Today', 7 => '7 days', 30 => '30 days', 90 => '90 days', 365 => '12 months'];
 
     public function __construct(private AuditLogger $audit, private SettingsRepository $settings) {}
@@ -36,7 +44,12 @@ class AnalyticsController extends Controller
             'from' => ['nullable', 'date_format:Y-m-d'], 'to' => ['nullable', 'date_format:Y-m-d'],
         ]);
 
-        return new Reports($d['from'] ?? null, $d['to'] ?? null, (int) ($d['days'] ?? 30));
+        $r = new Reports($d['from'] ?? null, $d['to'] ?? null, (int) ($d['days'] ?? 30));
+        if ($r->from->diffInDays($r->to) > 1100) {
+            $r->from = $r->to->subDays(1100)->startOfDay();   // at most three years at a time
+        }
+
+        return $r;
     }
 
     public static function countryName(?string $code): string
@@ -74,7 +87,7 @@ class AnalyticsController extends Controller
     {
         $this->authorize('analytics.view');
         $r = $this->range($request);
-        $f = $request->validate(['tool' => ['nullable', Rule::in(array_keys(Tools::TOOLS))], 'channel' => ['nullable', 'in:web,app'], 'pdf' => ['nullable', 'boolean']]);
+        $f = $request->validate(['tool' => ['nullable', Rule::in(array_keys(ToolHistory::allTools()))], 'channel' => ['nullable', 'in:web,app'], 'pdf' => ['nullable', 'boolean']]);
         $history = $request->user()->can('tools.history')
             ? ToolRun::query()->with('user')->whereBetween('created_at', [$r->from->utc(), $r->to->utc()])
                 ->when($f['tool'] ?? null, fn ($q, $t) => $q->where('tool', $t))->when($f['channel'] ?? null, fn ($q, $c) => $q->where('channel', $c))
@@ -86,10 +99,12 @@ class AnalyticsController extends Controller
         return view('admin.analytics.tools', [
             'r' => $r, 'totals' => $r->toolTotals(), 'filters' => $f, 'history' => $history,
             'series' => $r->daily($r->toolRuns()->when($f['tool'] ?? null, fn ($q, $t) => $q->where('tool', $t)), 'count(*)', 'sum(pdf_downloads)', 'created_at'),
-            'sum' => ['runs' => (clone $runs)->count(), 'people' => (clone $runs)->distinct()->count('visitor'), 'pdfs' => (int) (clone $runs)->sum('pdf_downloads'),
+            'sum' => ['runs' => (clone $runs)->whereIn('tool', array_keys(Tools::TOOLS))->count(), 'lookups' => (clone $runs)->whereIn('tool', array_keys(ToolHistory::LOOKUPS))->count(),
+                'people' => (clone $runs)->distinct()->count('visitor'), 'pdfs' => $r->events('pdf_download')->count() + $r->events('pdf_download', 'app')->count(),
                 'kundli' => (clone $runs)->where('tool', 'kundli')->count(), 'matching' => (clone $runs)->where('tool', 'kundli-matching')->count()],
             'countries' => $r->top(clone $runs, 'country'),
             'pdfOff' => collect(array_keys(Tools::TOOLS))->filter(fn ($s) => ! $pdf->template($s)['enabled'])->values()->all(),
+            'pages' => $r->top($r->events('pageview')->whereIn('route', array_keys(self::FREE_PAGES)), 'route', 20),
         ]);
     }
 
@@ -98,10 +113,12 @@ class AnalyticsController extends Controller
         $this->authorize('tools.history');
         $this->audit->record('analytics.tool_run_viewed', $run);
         $display = null;
-        try {
-            $display = ToolDisplay::for($history->result($run));
-        } catch (RuntimeException $e) {
-            report($e);
+        if (isset(Tools::TOOLS[$run->tool])) {
+            try {
+                $display = ToolDisplay::for($history->result($run));
+            } catch (RuntimeException $e) {
+                report($e);
+            }
         }
 
         return view('admin.analytics.tool-run', ['run' => $run->load('user'), 'display' => $display, 'events' => $run->visitor
@@ -112,6 +129,7 @@ class AnalyticsController extends Controller
     public function toolRunPdf(ToolRun $run, ToolHistory $history, ToolPdf $pdf, Documents $docs): Response
     {
         $this->authorize('tools.history');
+        abort_unless(isset(Tools::TOOLS[$run->tool]), 404);
         try {
             $result = $history->result($run);
         } catch (RuntimeException $e) {
@@ -128,18 +146,19 @@ class AnalyticsController extends Controller
         $this->authorize('tools.history');
         $r = $this->range($request);
         $this->audit->record('analytics.tool_runs_exported', null, ['from' => $r->from->toDateString(), 'to' => $r->to->toDateString()]);
-        $rows = ToolRun::query()->whereBetween('created_at', [$r->from->utc(), $r->to->utc()])->orderByDesc('id')->lazyById(500);
+        $rows = ToolRun::query()->whereBetween('created_at', [$r->from->utc(), $r->to->utc()])->lazyByIdDesc(500);
         $safe = fn ($v) => preg_match('/^[=+\-@\t\r]/', (string) $v) ? "'".$v : (string) $v;
 
         return response()->streamDownload(function () use ($rows, $safe) {
             $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF");   // UTF-8 marker so Excel shows Hindi names correctly
             fputcsv($out, ['Reference', 'When (IST)', 'Calculator', 'Channel', 'Details entered', 'Result', 'Country', 'Device', 'Language', 'PDF downloads', 'Customer account']);
             foreach ($rows as $run) {
-                fputcsv($out, array_map($safe, [$run->ref, $run->created_at->tz('Asia/Kolkata')->format('Y-m-d H:i'), Tools::TOOLS[$run->tool][0] ?? $run->tool, $run->channel,
+                fputcsv($out, array_map($safe, [$run->ref, $run->created_at->tz('Asia/Kolkata')->format('Y-m-d H:i'), ToolHistory::name($run->tool), $run->channel,
                     $run->personLine(), $run->summary, $run->country, $run->device, $run->locale, $run->pdf_downloads, $run->user_id ? 'yes' : '']));
             }
             fclose($out);
-        }, 'calculator-history-'.now()->format('Ymd-His').'.csv', ['Content-Type' => 'text/csv']);
+        }, 'calculator-history-'.now()->format('Ymd-His').'.csv', ['Content-Type' => 'text/csv; charset=UTF-8', 'Cache-Control' => 'no-store, private']);
     }
 
     public function app(Request $request): View

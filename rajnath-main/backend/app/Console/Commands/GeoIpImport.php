@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Domain\Analytics\GeoIp;
+use App\Support\Settings\SettingsRepository;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Throwable;
@@ -16,13 +17,19 @@ use Throwable;
  */
 class GeoIpImport extends Command
 {
-    protected $signature = 'arj:geoip-import {--file= : Local .csv or .csv.gz file instead of downloading}';
+    protected $signature = 'arj:geoip-import {--file= : Local .csv or .csv.gz file instead of downloading} {--force : Download even if the list is recent}';
 
     protected $description = 'Load the IP-to-country table used by Admin › Analytics.';
 
-    public function handle(GeoIp $geo): int
+    public function handle(GeoIp $geo, SettingsRepository $settings): int
     {
         $path = (string) $this->option('file');
+        $last = $settings->get('analytics.geoip_loaded_at');
+        if ($path === '' && ! $this->option('force') && $last && $geo->loaded() && now()->diffInDays($last) < 25) {
+            $this->line('GeoIP list is recent ('.$last.'); not downloading again.');
+
+            return self::SUCCESS;
+        }
         $tmp = null;
         try {
             if ($path === '') {
@@ -49,6 +56,7 @@ class GeoIpImport extends Command
             }
             $n = $geo->import($handle);
             fclose($handle);
+            $settings->set('analytics.geoip_loaded_at', now()->toDateString(), false, 'analytics');
             $this->info("GeoIP ranges loaded: $n (IP geolocation by DB-IP, CC BY 4.0).");
 
             return self::SUCCESS;

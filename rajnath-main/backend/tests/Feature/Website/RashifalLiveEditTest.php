@@ -26,7 +26,7 @@ class RashifalLiveEditTest extends TestCase
             ->assertSee('मेष राशि के लिए आज का दिन अच्छा रहेगा')->assertSee('AI');
 
         $new = 'मेष राशि: आज धैर्य रखें। नए काम की शुरुआत दोपहर के बाद करें, हनुमान चालीसा का पाठ लाभ देगा।';
-        $this->asStaff($owner)->put(route('admin.rashifal.update', $id), ['body' => $new])->assertRedirect();
+        $this->asStaff($owner)->put(route('admin.rashifal.update', $id), ['body' => $new, 'version' => 1])->assertRedirect();
         $row = DB::table('horoscopes')->find($id);
         $this->assertSame($new, $row->body);
         $this->assertSame('staff', $row->source);
@@ -36,6 +36,8 @@ class RashifalLiveEditTest extends TestCase
 
         $author = $this->makeStaff(['content_author']);   // can read, cannot change live text
         $this->asStaff($author)->get(route('admin.rashifal.live'))->assertOk();
-        $this->asStaff($author)->put(route('admin.rashifal.update', $id), ['body' => str_repeat('x', 50)])->assertForbidden();
+        $this->asStaff($author)->put(route('admin.rashifal.update', $id), ['body' => str_repeat('x', 50), 'version' => 2])->assertForbidden();
+        // an old copy of the page cannot overwrite a newer edit
+        $this->asStaff($owner)->put(route('admin.rashifal.update', $id), ['body' => str_repeat('पुराना पाठ ', 6), 'version' => 1])->assertSessionHasErrors('body');
     }
 }

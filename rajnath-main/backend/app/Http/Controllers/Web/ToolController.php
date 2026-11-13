@@ -41,7 +41,7 @@ class ToolController extends Controller
 
             return view('public.tools.show', ['slug' => $slug, 'tool' => Tools::TOOLS[$slug], 'result' => null, 'engineError' => true]);
         }
-        $run = $history->record($slug, $in, $result, $request, 'web', $request->attributes->get('analytics.ids')['visitor'] ?? null);
+        $run = $history->record($slug, $in, $result, $request, 'web', ToolHistory::visitorFor($request));
 
         return view('public.tools.show', ['slug' => $slug, 'tool' => Tools::TOOLS[$slug], 'result' => $result,
             'pdfUrl' => $run && $pdf->template($slug)['enabled'] ? ToolHistory::pdfUrl($run) : null]);
@@ -58,14 +58,14 @@ class ToolController extends Controller
             abort(503, 'The calculation service is unavailable right now. Please try again in a few minutes.');
         }
         $response = $docs->download($pdf->html($slug, $result, $run->ref), $slug.'-'.substr($run->ref, -8).'.pdf');
-        if ($response->isSuccessful()) {
+        if ($response->isSuccessful() && $request->isMethod('GET')) {
             $history->countPdf($run, $request, $request->query('via') === 'app' ? 'app' : 'web');
         }
 
         return $response;
     }
 
-    public function panchang(Request $request, PanchangService $panchang): View
+    public function panchang(Request $request, PanchangService $panchang, ToolHistory $history): View
     {
         $data = $request->validate(['date' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:1800-01-01', 'before_or_equal:2399-12-31'], 'place_id' => ['nullable', 'integer', 'exists:places,id']]);
         $place = DB::table('places')->where('id', $data['place_id'] ?? 1260086)->first() ?? (object) ['id' => null, 'name' => 'Patna', 'admin1' => 'Bihar', 'country' => 'India', 'lat' => 25.59408, 'lng' => 85.13563, 'tz_name' => 'Asia/Kolkata'];
@@ -75,6 +75,10 @@ class ToolController extends Controller
         } catch (RuntimeException $e) {
             report($e);
             $p = null;
+        }
+
+        if ($p) {
+            $history->lookup('panchang', ['date' => $date, 'place' => ToolHistory::placeLabel($place)], 'Panchang '.$date.' · '.$place->name, $request, 'web', ToolHistory::visitorFor($request));
         }
 
         return view('public.panchang', ['p' => $p, 'date' => $date, 'place' => $place, 'placeLabel' => implode(', ', array_filter([$place->name, $place->admin1, $place->country]))]);

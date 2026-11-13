@@ -22,11 +22,11 @@ class AnalyticsBeaconController extends Controller
             'target' => ['nullable', 'string', 'max:300'],
             'seconds' => ['nullable', 'integer', 'min:0', 'max:3600'],
         ]);
-        $ids = $tracker->identify($request);
+        $ids = $request->attributes->get('analytics.ids') ?? $tracker->identify($request);
         if (! Tracker::validId((string) $request->cookie(Tracker::VISITOR_COOKIE))) {
             return response()->noContent();   // no page view was counted for this browser
         }
-        $path = '/'.ltrim((string) parse_url($data['path'], PHP_URL_PATH), '/');
+        $path = Tracker::cleanPath((string) parse_url($data['path'], PHP_URL_PATH));
         $tracker->record($data['type'], $tracker->context($request, $ids) + [
             'path' => mb_substr($path, 0, 300),
             'label' => isset($data['label']) ? mb_substr(trim(preg_replace('/\s+/u', ' ', strip_tags($data['label']))), 0, 200) : null,
@@ -52,6 +52,6 @@ class AnalyticsBeaconController extends Controller
         }
         $own = ! isset($p['host']) || $p['host'] === parse_url((string) config('app.url'), PHP_URL_HOST) || $p['host'] === request()->getHost();
 
-        return mb_substr(($own ? '' : $p['host']).($p['path'] ?? '/'), 0, 300);
+        return mb_substr(($own ? '' : $p['host']).Tracker::cleanPath($p['path'] ?? '/'), 0, 300);
     }
 }

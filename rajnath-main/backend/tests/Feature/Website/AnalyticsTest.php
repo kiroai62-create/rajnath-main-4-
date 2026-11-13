@@ -20,6 +20,7 @@ class AnalyticsTest extends TestCase
     {
         parent::setUp();
         $this->syncRbac();
+        config(['analytics.trust_cdn_country' => true]);
     }
 
     private const PHONE = 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0 Mobile Safari/537.36';
@@ -95,6 +96,14 @@ class AnalyticsTest extends TestCase
         $this->assertSame('1.13.0', DB::table('analytics_events')->where('type', 'app_open')->whereNotNull('app_version')->value('app_version'));
         $page = $this->asStaff($this->makeStaff(['owner']))->get(route('admin.analytics.app'))->assertOk()->assertSee('FAQ')->assertSee('Panchang')->assertSee('1.13.0');
         $this->assertSame(2, $page->viewData('totals')['devices']);
+        // failed app requests (not found, validation, throttled) are not feature use
+        $before = DB::table('analytics_events')->count();
+        $this->withHeaders($app)->getJson('/api/v1/blog/no-such-article')->assertNotFound();
+        $this->assertSame($before, DB::table('analytics_events')->count());
+        // a country header is ignored unless the site is behind a CDN that sets it
+        config(['analytics.trust_cdn_country' => false]);
+        $this->withHeaders($app)->getJson('/api/v1/meta');
+        $this->assertNull(DB::table('analytics_events')->orderByDesc('id')->value('country'));
         // website visits are not app opens, and the app does not count as website visitors
         $this->assertSame(0, DB::table('analytics_events')->where('channel', 'web')->count());
     }

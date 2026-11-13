@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Domain\Analytics\ToolHistory;
 use App\Domain\Astro\Festivals;
 use App\Domain\Astro\Gochar;
 use App\Domain\Astro\Vedic;
@@ -113,6 +114,8 @@ class ContentController extends Controller
             report($e);
             $days = null;
         }
+
+        app(ToolHistory::class)->lookup('calendar', ['month' => $month->format('Y-m'), 'place' => ToolHistory::placeLabel($place)], 'Vrat calendar '.$month->format('M Y').' · '.$place->name, $request, 'web', ToolHistory::visitorFor($request));
 
         return view('public.calendar', ['days' => $days, 'month' => $month, 'place' => $place, 'placeLabel' => implode(', ', array_filter([$place->name, $place->admin1, $place->country]))]);
     }

@@ -32,6 +32,7 @@
                     @can('content.publish')
                         <form method="POST" action="{{ route('admin.rashifal.update', $h->id) }}" class="mt-3 flex flex-1 flex-col gap-2">
                             @csrf @method('PUT')
+                            <input type="hidden" name="version" value="{{ $h->version }}">
                             <label for="b-{{ $h->id }}" class="sr-only">Text for {{ $name }}</label>
                             <textarea id="b-{{ $h->id }}" name="body" rows="7" minlength="40" maxlength="5000" class="input flex-1 text-sm" lang="{{ $h->locale }}">{{ $h->body }}</textarea>
                             <button class="btn-primary self-start">Save</button>

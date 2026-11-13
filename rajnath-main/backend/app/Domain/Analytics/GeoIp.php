@@ -33,7 +33,7 @@ class GeoIp
             return null;
         }
 
-        return Cache::remember('geo:'.sha1($bin), 86400, function () use ($bin) {
+        return Cache::remember('geo:'.hash_hmac('sha256', $bin, (string) config('app.key')), 86400, function () use ($bin) {
             $row = DB::table('geoip_ranges')->where('ip_start', '<=', $bin)->orderByDesc('ip_start')->first(['ip_end', 'country']);
 
             return $row && strcmp($row->ip_end, $bin) >= 0 && preg_match('/^[A-Z]{2}$/', $row->country) && $row->country !== 'ZZ' ? $row->country : '';

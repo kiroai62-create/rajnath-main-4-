@@ -62,6 +62,14 @@ class Tracker
         ];
     }
 
+    /** Page path with order/booking references replaced, so paths never identify a record. */
+    public static function cleanPath(string $path): string
+    {
+        $path = '/'.ltrim($path, '/');
+
+        return mb_substr(preg_replace('#/(?:[0-9A-HJKMNP-TV-Z]{26}|[0-9a-f-]{32,36}|\d{4,})(?=/|$)#i', '/{ref}', $path), 0, 300);
+    }
+
     public static function validId(?string $id): bool
     {
         return is_string($id) && preg_match('/^[A-Za-z0-9-]{8,40}$/', $id) === 1;
@@ -102,7 +110,7 @@ class Tracker
 
     public function country(Request $request): ?string
     {
-        foreach (['CF-IPCountry', 'CloudFront-Viewer-Country', 'X-Country-Code', 'X-AppEngine-Country'] as $h) {
+        foreach (config('analytics.trust_cdn_country') ? ['CF-IPCountry', 'CloudFront-Viewer-Country', 'X-Country-Code', 'X-AppEngine-Country'] : [] as $h) {
             $c = strtoupper((string) $request->header($h));
             if (preg_match('/^[A-Z]{2}$/', $c) && ! in_array($c, ['XX', 'T1'], true)) {
                 return $c;

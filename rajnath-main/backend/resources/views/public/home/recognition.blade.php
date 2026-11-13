@@ -22,7 +22,9 @@
             <div @class(['grid items-start gap-4', 'grid-cols-2' => $awardPhotos->count() > 1])>
                 @foreach ($awardPhotos as $n => $ph)
                     <figure @class(['group', 'mt-10' => $n === 1])>
-                        <x-photo :src="$ph['src']" :alt="$ph['alt']" class="h-auto w-full rounded-[var(--radius-card)] shadow-[var(--shadow-card)] ring-2 ring-gold-300/70 transition duration-500 group-hover:-rotate-1 group-hover:scale-[1.02]" />
+                        <div class="aspect-[4/5] overflow-hidden rounded-[var(--radius-card)] shadow-[var(--shadow-card)] ring-2 ring-gold-300/70">
+                            <x-photo :src="$ph['src']" :alt="$ph['alt']" class="size-full object-cover object-top transition duration-700 group-hover:scale-[1.04]" />
+                        </div>
                         <figcaption class="mt-2 line-clamp-2 text-xs text-ink-600">{{ $ph['alt'] }}</figcaption>
                     </figure>
                 @endforeach

@@ -4,6 +4,7 @@ namespace App\Domain\Privacy;
 
 use App\Domain\Reviews\Reviews;
 use App\Models\BirthProfile;
+use App\Models\ToolRun;
 use App\Models\User;
 use App\Support\Audit\AuditLogger;
 use Illuminate\Support\Facades\Crypt;
@@ -47,6 +48,8 @@ class PrivacyService
                 'messages' => DB::table('assistant_messages')->where('conversation_id', $c->id)->orderBy('id')->get(['role', 'content', 'created_at'])]),
             'reviews' => DB::table('reviews')->where('user_id', $u->id)->get(['ref', 'rating', 'title', 'body', 'display_name', 'city', 'status', 'created_at']),
             'app_devices_for_push' => DB::table('push_tokens')->where('user_id', $u->id)->count(),
+            'calculator_history' => ToolRun::where('user_id', $u->id)->orderBy('id')->get()->map(fn ($r) => ['tool' => $r->tool, 'details' => $r->inputs, 'result' => $r->summary, 'created_at' => $r->created_at?->toIso8601ZuluString()]),
+            'puja_requests' => DB::table('puja_requests')->where('user_id', $u->id)->get(['ref', 'puja_type', 'purpose', 'mode', 'preferred_date', 'status', 'scheduled_at', 'created_at']),
             'puja_bookings' => DB::table('puja_bookings')->where('user_id', $u->id)->get()->map(fn ($b) => ['ref' => $b->ref, 'status' => $b->status, 'sankalp' => $b->sankalp ? json_decode(Crypt::decryptString($b->sankalp), true) : null, 'scheduled_at' => $b->scheduled_at]),
         ];
         DB::table('privacy_requests')->insert(['ref' => (string) Str::ulid(), 'user_id' => $u->id, 'type' => 'export', 'status' => 'completed', 'case_status' => 'closed', 'closed_at' => now(), 'created_at' => now(), 'updated_at' => now()]);
@@ -137,6 +140,11 @@ class PrivacyService
             DB::table('user_notifications')->where('user_id', $u->id)->delete();
             DB::table('push_tokens')->where('user_id', $u->id)->delete();
             $steps[] = 'assistant chats, notifications and push registrations deleted';
+            $steps[] = 'calculator history deleted ('.DB::table('tool_runs')->where('user_id', $u->id)->delete().')';
+            DB::table('analytics_events')->where('user_id', $u->id)->update(['user_id' => null]);
+            DB::table('puja_requests')->where('user_id', $u->id)->update(['name' => 'Deleted', 'phone_e164' => '+0', 'email' => null, 'address' => null, 'purpose' => null,
+                'participants' => null, 'gotra' => null, 'birth_date' => null, 'birth_time' => null, 'birth_place' => null, 'message' => null, 'staff_note' => null, 'ip' => null]);
+            $steps[] = 'puja requests anonymised; website visits unlinked from the account';
             DB::table('otp_challenges')->where('user_id', $u->id)->delete();
             DB::table('sessions')->where('user_id', $u->id)->delete();
             $u->tokens()->delete();

@@ -6,7 +6,7 @@
         @foreach ($menu as $item)
             <li x-data="megaItem" @mouseenter="hoverIn" @mouseleave="hoverOut" @keydown.escape="escape" @click.outside="close" @focusout="focusOut" @menu-open.window="onOther">
                 <button type="button" x-ref="trigger" @click="toggle" :aria-expanded="expanded" aria-expanded="false" aria-controls="mega-{{ $item['key'] }}"
-                        class="btn-ghost gap-1 whitespace-nowrap px-3 text-[0.95rem] aria-expanded:bg-ivory-100 aria-expanded:text-ink-900">
+                        class="btn-ghost gap-0.5 whitespace-nowrap px-2 text-[0.9rem] aria-expanded:bg-ivory-100 aria-expanded:text-ink-900 2xl:px-3">
                     {{ $item['label'] }}
                     <svg aria-hidden="true" class="size-4 opacity-60 transition-transform" :class="chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.3 7.3a1 1 0 011.4 0L10 10.6l3.3-3.3a1 1 0 111.4 1.4l-4 4a1 1 0 01-1.4 0l-4-4a1 1 0 010-1.4z" clip-rule="evenodd"/></svg>
                 </button>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Analytics\ToolHistory;
 use App\Domain\Astro\Festivals;
 use App\Domain\Astro\Gochar;
 use App\Domain\Astro\Muhurat;
@@ -78,6 +79,7 @@ class ContentApiController extends Controller
     {
         abort_unless(in_array($planet, Gochar::PLANETS, true), 404);
         $d = $request->validate(['year' => ['nullable', 'integer', 'between:1900,2100'], 'month' => ['nullable', 'date_format:Y-m'], 'lang' => ['nullable', 'in:hi,en']]);
+        app(ToolHistory::class)->lookup('gochar', ['planet' => $planet, 'period' => ($d['month'] ?? $d['year'] ?? null)], 'Gochar · '.ucfirst($planet).' '.(($d['month'] ?? $d['year'] ?? null) ?? now('Asia/Kolkata')->year), $request, ToolHistory::channelFor($request), ToolHistory::visitorFor($request));
         $tz = 'Asia/Kolkata';
         if ($planet === 'moon') {
             $from = CarbonImmutable::parse(($d['month'] ?? now($tz)->format('Y-m')).'-01', $tz);
@@ -127,6 +129,8 @@ class ContentApiController extends Controller
             return $this->engineDown($e);
         }
 
+        app(ToolHistory::class)->lookup('muhurat', ['event' => Muhurat::EVENTS[$event]['name'], 'month' => $month->format('Y-m'), 'place' => ToolHistory::placeLabel($place)], Muhurat::EVENTS[$event]['name'].' · '.$month->format('M Y').' · '.$place->name, $request, ToolHistory::channelFor($request), ToolHistory::visitorFor($request));
+
         return response()->json(['data' => collect(Muhurat::candidates($event, $facts))->map(fn ($c) => ['date' => $c['date'], 'masa' => $c['facts']['masa'], 'masa_purnimanta' => $c['facts']['masa_purnimanta'] ?? $c['facts']['masa'],
             'windows' => array_map(fn ($w) => ['start' => $w[0], 'end' => $w[1], 'tithi' => $w[2], 'nakshatra' => $w[3]], $c['windows'])])->values(),
             'meta' => ['event' => $event, 'name' => Muhurat::EVENTS[$event]['name'], 'month' => $month->format('Y-m'), 'place' => ['id' => $place->id, 'name' => $place->name],
@@ -142,6 +146,8 @@ class ContentApiController extends Controller
         } catch (RuntimeException $e) {
             return $this->engineDown($e);
         }
+
+        app(ToolHistory::class)->lookup('festivals', ['year' => $d['year'] ?? null, 'religion' => $d['religion'] ?? null, 'place' => ToolHistory::placeLabel($place)], 'Festivals '.($d['year'] ?? now($place->tz_name)->year).' · '.$place->name, $request, ToolHistory::channelFor($request), ToolHistory::visitorFor($request));
 
         return response()->json(['data' => $list->when($d['religion'] ?? null, fn ($c, $r) => $c->where('religion', $r))->values(),
             'meta' => ['religions' => Festivals::RELIGIONS, 'place' => ['id' => $place->id, 'name' => $place->name]]]);
@@ -166,6 +172,8 @@ class ContentApiController extends Controller
         } catch (RuntimeException $e) {
             return $this->engineDown($e);
         }
+
+        app(ToolHistory::class)->lookup('calendar', ['month' => $month->format('Y-m'), 'place' => ToolHistory::placeLabel($place)], 'Vrat calendar '.$month->format('M Y').' · '.$place->name, $request, ToolHistory::channelFor($request), ToolHistory::visitorFor($request));
 
         return response()->json(['data' => collect($days)->map(fn ($x, $date) => ['date' => $date, 'tithi' => $x['tithi'], 'nakshatra' => $x['nakshatra'], 'events' => $x['events']])->values(),
             'meta' => ['month' => $month->format('Y-m'), 'place' => ['id' => $place->id, 'name' => $place->name]]]);

@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 /** Public About, Awards and Gallery pages (content from Admin › About & awards and Admin › Gallery). */
@@ -26,10 +27,18 @@ class ShowcaseController extends Controller
         $fromEntries = app(Profile::class)->entries('award')->whereNotNull('image_path')->map(fn ($e) => ['src' => $e->image_path, 'alt' => Profile::line($e)]);
         $fromAlbums = DB::table('gallery_items as i')->join('gallery_albums as a', 'a.id', '=', 'i.album_id')
             ->where('a.published', true)->where('a.category', 'awards')->where('i.kind', 'photo')
-            ->orderBy('a.sort')->orderBy('i.sort')->limit($limit)->get(['i.path', 'i.caption', 'i.caption_hi', 'a.title'])
+            ->orderBy('a.sort')->orderBy('i.sort')->limit($limit + 6)->get(['i.path', 'i.caption', 'i.caption_hi', 'a.title'])
             ->map(fn ($i) => ['src' => $i->path, 'alt' => Profile::tr($i, 'caption') ?: $i->title]);
 
-        return $fromEntries->concat($fromAlbums)->filter(fn ($p) => Gallery::fileExists($p['src']))->unique('src')->take($limit)->values();
+        // Upright photos only: they sit side by side in equal frames (a wide photo would look tiny).
+        $upright = function (array $p): bool {
+            $file = str_starts_with($p['src'], 'uploads/') ? Storage::disk(Gallery::DISK)->path(substr($p['src'], strlen('uploads/'))) : public_path($p['src']);
+            $size = $file && is_file($file) ? @getimagesize($file) : null;
+
+            return ! $size || $size[1] >= $size[0];
+        };
+
+        return $fromEntries->concat($fromAlbums)->filter(fn ($p) => Gallery::fileExists($p['src']))->filter($upright)->unique('src')->take($limit)->values();
     }
 
     public function about(): View

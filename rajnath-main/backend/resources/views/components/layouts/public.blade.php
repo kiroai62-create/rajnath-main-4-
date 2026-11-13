@@ -37,11 +37,11 @@
     @endif
     <header class="sticky top-0 z-40 border-b border-gold-200/60 bg-white/90 shadow-[0_6px_24px_-18px_rgb(27_20_70/0.5)] backdrop-blur-md pt-[env(safe-area-inset-top)]" x-data="disclosure">
         <div aria-hidden="true" class="h-0.5 bg-gradient-to-r from-maroon-600 via-gold-500 to-saffron-500"></div>
-        <div class="container-page flex h-[4.25rem] items-center justify-between gap-4">
+        <div class="container-page flex h-[4.25rem] items-center justify-between gap-3 xl:max-w-[92rem] 2xl:gap-4">
             {{-- The logo never shrinks when the menu and buttons need room (xl:shrink-0). --}}
             <a href="{{ route('home') }}" class="flex min-w-0 items-center gap-2.5 no-underline xl:shrink-0">
                 <img src="/images/brand/logo-mark.svg" alt="" width="52" height="52" class="size-13 shrink-0 transition duration-700 hover:rotate-[30deg] xl:hidden">
-                <img src="/images/brand/logo-full.svg" alt="{{ $site('brand.name') }}" width="198" height="51" class="hidden h-[3.4rem] w-auto max-w-none shrink-0 xl:block">
+                <img src="/images/brand/logo-full.svg" alt="{{ $site('brand.name') }}" width="198" height="51" class="hidden h-12 w-auto max-w-none shrink-0 xl:block 2xl:h-[3.4rem]">
                 <span class="min-w-0 leading-tight xl:sr-only"><span class="text-maroon-grad block truncate text-base font-bold">{{ $site('brand.name') }}</span>
                     <span class="hidden whitespace-nowrap text-[0.7rem] uppercase tracking-[0.14em] text-gold-700 sm:block">{{ __('Jyotish · Vastu · Puja') }}</span></span>
             </a>
@@ -68,7 +68,7 @@
                     <x-dropdown id="account-menu" width="w-72" :label="__('My account')" button-class="btn-ghost gap-2 py-1.5 pl-1.5 pr-3" class="hidden sm:block">
                         <x-slot:trigger>
                             <span aria-hidden="true" class="avatar size-8">{{ \App\Support\AccountMenu::initials($me->name) }}</span>
-                            <span class="hidden max-w-[9rem] truncate lg:inline xl:hidden 2xl:inline">{{ $isStaff ? $meName : __('My account') }}</span>
+                            <span class="hidden max-w-[9rem] truncate lg:inline xl:hidden min-[1700px]:inline">{{ $isStaff ? $meName : __('My account') }}</span>
                         </x-slot:trigger>
                         <div class="flex items-center gap-3 px-3 py-2.5">
                             <span aria-hidden="true" class="avatar">{{ \App\Support\AccountMenu::initials($me->name) }}</span>
@@ -93,7 +93,7 @@
                 @else
                     <a href="{{ $accountUrl }}" class="btn-ghost hidden whitespace-nowrap px-3 sm:inline-flex">{{ __('Sign in') }}</a>
                 @endif
-                <a href="{{ route('services.index', ['family' => 'consultations']) }}" class="btn-primary hidden whitespace-nowrap sm:inline-flex">{{ __('Book consultation') }}</a>
+                <a href="{{ route('services.index', ['family' => 'consultations']) }}" class="btn-primary hidden whitespace-nowrap sm:inline-flex xl:px-4 2xl:px-5">{{ __('Book consultation') }}</a>
                 <button type="button" x-ref="opener" class="btn-ghost px-3 xl:hidden" @click="toggle" :aria-expanded="expanded" aria-expanded="false" aria-controls="mobile-nav" aria-label="{{ __('Menu') }}">
                     <svg aria-hidden="true" class="size-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"/></svg>
                 </button>

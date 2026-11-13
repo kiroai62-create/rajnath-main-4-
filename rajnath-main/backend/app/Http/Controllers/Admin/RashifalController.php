@@ -51,18 +51,21 @@ class RashifalController extends Controller
     {
         $this->authorize('content.publish');
         $h = DB::table('horoscopes')->find($id);
-        abort_unless($h, 404);
-        $d = $request->validate(['body' => ['required', 'string', 'min:40', 'max:5000']]);
+        abort_unless($h && in_array($h->status, ['published', 'draft'], true), 404);
+        $d = $request->validate(['body' => ['required', 'string', 'min:40', 'max:5000'], 'version' => ['required', 'integer']]);
+        if ((int) $d['version'] !== (int) $h->version) {
+            return back()->withErrors(['body' => 'Someone changed this text a moment ago. The page now shows their version; make your change again.']);
+        }
         if (trim($d['body']) === trim($h->body)) {
             return back()->with('status', 'No change.');
         }
-        DB::table('horoscopes')->where('id', $id)->update([
+        DB::table('horoscopes')->where('id', $id)->where('version', $h->version)->update([
             'body' => trim($d['body']), 'source' => 'staff', 'status' => 'published', 'author_id' => $request->user()->id, 'reviewer_id' => $request->user()->id,
             'published_at' => now(), 'version' => $h->version + 1, 'updated_at' => now(),
         ]);
         $this->audit->record('content.horoscope_edited', null, ['id' => $id, 'kind' => $h->kind, 'sign' => $h->sign, 'period' => $h->period,
             'previous_source' => $h->source, 'previous_text' => mb_substr($h->body, 0, 5000)]);
 
-        return back()->with('status', 'Saved. The website shows the new text now.');
+        return back()->with('status', 'Saved. The Rashifal page shows the new text now (the home page within 10 minutes).');
     }
 }

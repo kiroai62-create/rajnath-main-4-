@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 
 import 'api_client.dart';
 
@@ -10,13 +10,20 @@ class AppAnalytics {
   AppAnalytics._();
   static final AppAnalytics instance = AppAnalytics._();
 
-  ApiClient? api;
+  ApiClient? _api;
+  AppLifecycleListener? _lifecycle;
   final List<Map<String, dynamic>> _queue = [];
   Timer? _timer;
 
-  void screen(String name) => _add({'type': 'screen', 'name': name});
+  ApiClient? get api => _api;
 
-  void tap(String name) => _add({'type': 'tap', 'name': name});
+  /// Starts sending; waiting screen views are also sent when the app goes to the background.
+  set api(ApiClient? client) {
+    _api = client;
+    _lifecycle ??= AppLifecycleListener(onHide: flush, onPause: flush);
+  }
+
+  void screen(String name) => _add({'type': 'screen', 'name': name});
 
   void _add(Map<String, dynamic> e) {
     if (api == null || name(e).isEmpty) return;

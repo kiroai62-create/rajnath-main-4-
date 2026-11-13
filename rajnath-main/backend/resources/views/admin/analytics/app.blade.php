@@ -1,4 +1,4 @@
-@php $T = \App\Domain\Astro\Tools::TOOLS; $C = \App\Http\Controllers\Admin\AnalyticsController::class; @endphp
+@php $T = \App\Domain\Analytics\ToolHistory::allTools(); $C = \App\Http\Controllers\Admin\AnalyticsController::class; @endphp
 <x-layouts.admin title="Mobile app analytics">
     @include('admin.analytics._range')
 
@@ -16,7 +16,7 @@
         <section class="card p-5" aria-label="Calculators used in the app">
             <h2 class="text-base">Calculators used in the app</h2>
             @if ($tools->isEmpty())<p class="mt-3 text-sm text-ink-600">None in this period.</p>@else
-            <ul class="mt-3 space-y-1 text-sm">@foreach ($tools as $t)<li class="flex justify-between border-t border-ink-200/50 py-1.5"><span>{{ $T[$t->tool][0] ?? $t->tool }}</span><span class="tabular-nums">{{ number_format($t->n) }}</span></li>@endforeach</ul>@endif
+            <ul class="mt-3 space-y-1 text-sm">@foreach ($tools as $t)<li class="flex justify-between border-t border-ink-200/50 py-1.5"><span>{{ $T[$t->tool] ?? $t->tool }}</span><span class="tabular-nums">{{ number_format($t->n) }}</span></li>@endforeach</ul>@endif
         </section>
         @include('admin.analytics._list', ['rows' => $versions, 'title' => 'App versions', 'label' => 'Version', 'nLabel' => 'Requests', 'vLabel' => 'Phones'])
         @include('admin.analytics._list', ['rows' => $countries, 'title' => 'Countries', 'label' => 'Country', 'nLabel' => 'Requests', 'vLabel' => 'Phones', 'format' => fn ($k) => $C::countryName($k)])

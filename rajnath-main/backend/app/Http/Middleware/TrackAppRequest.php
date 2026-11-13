@@ -43,13 +43,13 @@ class TrackAppRequest
 
     public function terminate(Request $request, Response $response): void
     {
-        if (! self::isApp($request) || ! $this->tracker->enabled() || $request->is(...self::QUIET) || $response->getStatusCode() >= 500) {
+        if (! self::isApp($request) || ! $this->tracker->enabled() || $request->is(...self::QUIET) || $response->getStatusCode() >= 400) {
             return;
         }
         $route = $request->route()?->uri();
-        $this->tracker->record($request->is('api/v1/meta') ? 'app_open' : 'app_call', self::context($request, $this->tracker) + [
+        rescue(fn () => $this->tracker->record($request->is('api/v1/meta') ? 'app_open' : 'app_call', self::context($request, $this->tracker) + [
             'path' => '/'.ltrim($request->path(), '/'), 'route' => $route ? mb_substr($route, 0, 80) : null,
-        ]);
+        ]), null, true);
     }
 
     /** @return array<string, mixed> */

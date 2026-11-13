@@ -1,10 +1,10 @@
-@php $T = \App\Domain\Astro\Tools::TOOLS; $C = \App\Http\Controllers\Admin\AnalyticsController::class; $in = $run->inputs ?? []; @endphp
-<x-layouts.admin :title="($T[$run->tool][0] ?? $run->tool).' · '.$run->created_at->tz('Asia/Kolkata')->format('d M Y, g:i A')">
+@php $T = \App\Domain\Analytics\ToolHistory::allTools(); $C = \App\Http\Controllers\Admin\AnalyticsController::class; $in = $run->inputs ?? []; @endphp
+<x-layouts.admin :title="($T[$run->tool] ?? $run->tool).' · '.$run->created_at->tz('Asia/Kolkata')->format('d M Y, g:i A')">
     <div class="grid gap-6 lg:grid-cols-[1fr_22rem]">
         <section class="card min-w-0 p-5 sm:p-6">
             <h2 class="text-lg">Result</h2>
             @if (! $display)
-                <p class="mt-3 text-sm text-ink-600">The calculation service is unavailable, so the result cannot be shown right now.</p>
+                <p class="mt-3 text-sm text-ink-600">{{ isset(\App\Domain\Astro\Tools::TOOLS[$run->tool]) ? 'The calculation service is unavailable, so the result cannot be shown right now.' : $run->summary }}</p>
             @else
                 @foreach ($display['sections'] as $s)
                     <div class="mt-5">
@@ -39,7 +39,7 @@
                     <div><dt class="text-ink-600">Customer account</dt><dd>@if ($run->user)<a href="{{ route('admin.customers.show', $run->user) }}">{{ $run->user->name ?: $run->user->phone_e164 }}</a>@else Guest @endif</dd></div>
                     <div><dt class="text-ink-600">Reference</dt><dd class="font-mono text-xs">{{ $run->ref }}</dd></div>
                 </dl>
-                <a href="{{ route('admin.analytics.tools.pdf', $run) }}" class="btn-outline mt-4 w-full">Download PDF</a>
+                @if (isset(\App\Domain\Astro\Tools::TOOLS[$run->tool]))<a href="{{ route('admin.analytics.tools.pdf', $run) }}" class="btn-outline mt-4 w-full">Download PDF</a>@endif
             </section>
             @if ($events->isNotEmpty())
             <section class="card p-5">

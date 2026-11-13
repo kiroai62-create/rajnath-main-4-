@@ -25,7 +25,7 @@ class ToolApiController extends Controller
         $in = $request->validate(Tools::rules(Tools::TOOLS[$slug][1]));
         try {
             $r = $tools->compute($slug, $in);
-            $run = $history->record($slug, $in, $r, $request, TrackAppRequest::isApp($request) ? 'app' : 'web', TrackAppRequest::isApp($request) ? TrackAppRequest::installId($request) : null);
+            $run = $history->record($slug, $in, $r, $request, TrackAppRequest::isApp($request) ? 'app' : 'web', ToolHistory::visitorFor($request));
             $pdfUrl = $run && $pdf->template($slug)['enabled']
                 ? URL::temporarySignedRoute('tools.pdf', now()->addDay(), ['slug' => $slug, 'run' => $run->ref, 'via' => 'app']) : null;
 
@@ -37,12 +37,15 @@ class ToolApiController extends Controller
         }
     }
 
-    public function panchang(Request $request, PanchangService $panchang): JsonResponse
+    public function panchang(Request $request, PanchangService $panchang, ToolHistory $history): JsonResponse
     {
         $d = $request->validate(['date' => ['required', 'date_format:Y-m-d', 'after_or_equal:1800-01-01', 'before_or_equal:2399-12-31'], 'place_id' => ['required', 'integer', 'exists:places,id']]);
         $p = DB::table('places')->where('id', $d['place_id'])->first();
         try {
-            return response()->json(['data' => $panchang->day($d['date'], (float) $p->lat, (float) $p->lng, $p->tz_name)]);
+            $day = $panchang->day($d['date'], (float) $p->lat, (float) $p->lng, $p->tz_name);
+            $history->lookup('panchang', ['date' => $d['date'], 'place' => ToolHistory::placeLabel($p)], 'Panchang '.$d['date'].' · '.$p->name, $request, ToolHistory::channelFor($request), ToolHistory::visitorFor($request));
+
+            return response()->json(['data' => $day]);
         } catch (RuntimeException $e) {
             report($e);
 

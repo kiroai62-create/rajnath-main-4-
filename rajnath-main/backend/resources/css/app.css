@@ -72,6 +72,10 @@
 
 @layer base {
     html { -webkit-text-size-adjust: 100%; }
+    /* Desktop: all text 1px smaller (15px base; everything sized in rem follows). Phones keep 16px so
+       form fields never trigger the iPhone zoom. Nothing may make the page scroll sideways. */
+    @media (min-width: 1024px) { html { font-size: 93.75%; } }
+    html, body { overflow-x: clip; }
     body {
         @apply bg-ivory-50 text-ink-900 font-sans antialiased;
         text-rendering: optimizeLegibility;

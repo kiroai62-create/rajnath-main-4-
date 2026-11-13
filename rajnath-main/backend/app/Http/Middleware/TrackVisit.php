@@ -46,11 +46,11 @@ class TrackVisit
             return;
         }
         $ids = $request->attributes->get('analytics.ids');
-        $this->tracker->record('pageview', $this->tracker->context($request, $ids) + [
-            'is_new' => $ids['new_visitor'], 'path' => '/'.ltrim($request->path(), '/'), 'route' => $request->route()?->getName(),
+        rescue(fn () => $this->tracker->record('pageview', $this->tracker->context($request, $ids) + [
+            'is_new' => $ids['new_visitor'], 'path' => Tracker::cleanPath($request->path()), 'route' => $request->route()?->getName(),
             'referrer' => Tracker::referrer($request),
             'utm_source' => self::utm($request, 'utm_source'), 'utm_medium' => self::utm($request, 'utm_medium'), 'utm_campaign' => self::utm($request, 'utm_campaign'),
-        ]);
+        ]), null, true);
     }
 
     private static function utm(Request $request, string $key): ?string

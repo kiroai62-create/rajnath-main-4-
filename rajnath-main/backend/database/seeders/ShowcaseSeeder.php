@@ -16,7 +16,7 @@ class ShowcaseSeeder extends Seeder
 {
     /** [section, title, detail, year, group, featured, image] */
     private const ENTRIES = [
-        ['award', 'Professor Award 2026', 'IVAF International Vedic Astrology Federation, for participation in the Sri Lanka Sacred Astrological Symposium (Astrology, Vastu & Gemstone), Kandy, 8 Sep 2026', '2026', 'international', true, null],
+        ['award', 'Professor Award 2026', 'IVAF International Vedic Astrology Federation, for participation in the Sri Lanka Sacred Astrological Symposium (Astrology, Vastu & Gemstone), Kandy, 8 Sep 2026', '2026', 'international', true, 'images/gallery/sri-lanka-astrological-symposium-professor-award-2026/03-thumb.jpg'],
         ['award', 'Global Astrological Iconic Award & Lifetime Achievement Honour', 'Subramanyam Astrological & Spiritual Convocation, Malaysia', '2025', 'international', true, 'images/owner/award-malaysia-2025-480.jpg'],
         ['award', 'US Global Excellence Award', 'New Delhi', '2024', 'international', false, null],
         ['award', 'Maharshi Gyan Ratan Award', 'Vietnam', '2024', 'international', false, null],
@@ -77,8 +77,16 @@ class ShowcaseSeeder extends Seeder
         ['At the office in Kankarbagh, Patna', 'office', 'Where Acharya Ji meets visitors for consultations.', ['office-wide-960.jpg', 'desk-black-480.jpg', 'writing-navy-480.jpg', 'writing-red-480.jpg', 'seated-navy-480.jpg']],
     ];
 
+    /** Photo of Acharya Ji receiving the Professor Award 2026, added once to existing sites (Admin › About & awards can change it). */
+    public const PROFESSOR_AWARD_PHOTO = 'images/gallery/sri-lanka-astrological-symposium-professor-award-2026/03-thumb.jpg';
+
     public function run(): void
     {
+        if (! DB::table('settings')->where('key', 'showcase.professor_award_photo')->exists()) {
+            DB::table('profile_entries')->where('section', 'award')->where('title', 'Professor Award 2026')->whereNull('image_path')
+                ->update(['image_path' => self::PROFESSOR_AWARD_PHOTO, 'updated_at' => now()]);
+            DB::table('settings')->insert(['key' => 'showcase.professor_award_photo', 'group' => 'showcase', 'value' => 'true', 'is_secret' => false, 'created_at' => now(), 'updated_at' => now()]);
+        }
         if (! DB::table('profile_entries')->exists()) {
             $sort = [];
             foreach (self::ENTRIES as [$section, $title, $detail, $year, $group, $featured, $image]) {

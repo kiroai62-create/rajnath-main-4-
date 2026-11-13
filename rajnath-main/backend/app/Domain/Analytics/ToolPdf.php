@@ -52,7 +52,7 @@ class ToolPdf
         $all = (array) $this->settings->get('pdf.tool_templates', []);
         $base = array_merge(self::DEFAULT, (array) ($all['default'] ?? []));
 
-        return array_merge($base, array_filter((array) ($all[$slug] ?? []), fn ($v) => $v !== null && $v !== ''));
+        return array_merge($base, array_filter((array) ($all[$slug] ?? []), fn ($v) => $v !== null));
     }
 
     public function hasOwn(string $slug): bool
@@ -66,8 +66,17 @@ class ToolPdf
         $all = (array) $this->settings->get('pdf.tool_templates', []);
         if ($values === null) {
             unset($all[$slug]);
+        } elseif ($slug === 'default') {
+            $all['default'] = array_intersect_key($values, array_flip(self::FIELDS));
         } else {
-            $all[$slug] = array_intersect_key($values, array_flip(self::FIELDS));
+            // Only what differs from the default is kept, so later changes to the default still apply.
+            $base = array_merge(self::DEFAULT, (array) ($all['default'] ?? []));
+            $own = array_filter(array_intersect_key($values, array_flip(self::FIELDS)), fn ($v, $k) => $v !== ($base[$k] ?? null), ARRAY_FILTER_USE_BOTH);
+            if ($own) {
+                $all[$slug] = $own;
+            } else {
+                unset($all[$slug]);
+            }
         }
         $this->settings->set('pdf.tool_templates', $all, false, 'pdf');
     }

@@ -41,7 +41,8 @@ class ApiClient {
       final t = await token();
       if (t != null) o.headers['Authorization'] = 'Bearer $t';
       if (locale != null) o.headers['Accept-Language'] = locale;
-      // Admin › Analytics › Mobile app: a random id made on this phone (not linked to the person), the app version and platform.
+      // Admin › Analytics › Mobile app: a random id made on this phone, the app version and platform. When the person is
+      // signed in, the server can see which account used the app (the privacy policy says so).
       o.headers['X-App-Install'] = await installId();
       o.headers['X-App-Version'] = appVersion;
       o.headers['X-App-Platform'] = Platform.isIOS ? 'ios' : 'android';
@@ -54,21 +55,22 @@ class ApiClient {
   static const _tokenKey = 'arj_token';
   static const _localeKey = 'arj_locale';
   static const _installKey = 'arj_install';
-  String? _installId;
+  Future<String>? _installId;
 
-  /// Random id for this installation, created once and kept in secure storage.
-  Future<String> installId() async {
-    if (_installId != null) return _installId!;
+  /// Random id for this installation, created once and kept in secure storage. The future is shared,
+  /// so requests sent together at start-up all use the same id.
+  Future<String> installId() => _installId ??= _loadInstallId();
+
+  Future<String> _loadInstallId() async {
     try {
-      _installId = await _storage.read(key: _installKey);
-      if (_installId == null) {
-        _installId = const Uuid().v4();
-        await _storage.write(key: _installKey, value: _installId);
-      }
+      final saved = await _storage.read(key: _installKey);
+      if (saved != null && saved.isNotEmpty) return saved;
+      final id = const Uuid().v4();
+      await _storage.write(key: _installKey, value: id);
+      return id;
     } catch (_) {
-      _installId ??= const Uuid().v4();
+      return const Uuid().v4();
     }
-    return _installId!;
   }
   void Function()? onUnauthorized;
 

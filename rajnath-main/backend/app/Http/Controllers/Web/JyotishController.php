@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Domain\Analytics\ToolHistory;
 use App\Domain\Astro\Festivals;
 use App\Domain\Astro\Gochar;
 use App\Domain\Astro\Muhurat;
@@ -47,6 +48,7 @@ class JyotishController extends Controller
     public function planet(Request $request, string $planet, Gochar $gochar): View
     {
         $d = $request->validate(['year' => ['nullable', 'integer', 'between:'.self::MIN_YEAR.','.self::MAX_YEAR], 'month' => ['nullable', 'date_format:Y-m'], 'lang' => ['nullable', 'in:hi,en']]);
+        app(ToolHistory::class)->lookup('gochar', ['planet' => $planet, 'period' => ($d['month'] ?? $d['year'] ?? null)], 'Gochar · '.ucfirst($planet).' '.(($d['month'] ?? $d['year'] ?? null) ?? now('Asia/Kolkata')->year), $request, 'web', ToolHistory::visitorFor($request));
         $locale = ($d['lang'] ?? 'hi') === 'en' ? 'en' : 'hi';
         $tz = 'Asia/Kolkata';
         // The Moon changes sign every ~2¼ days, so its page is by month; the others by year.
@@ -103,6 +105,11 @@ class JyotishController extends Controller
             $dates = null;
         }
 
+        if ($dates !== null) {
+            app(ToolHistory::class)->lookup('muhurat', ['event' => Muhurat::EVENTS[$event]['name'] ?? $event, 'month' => $month->format('Y-m'), 'place' => self::label($place)],
+                (Muhurat::EVENTS[$event]['name'] ?? $event).' · '.$month->format('M Y').' · '.$place->name, $request, 'web', ToolHistory::visitorFor($request));
+        }
+
         return view('public.muhurat.show', ['event' => $event, 'rule' => Muhurat::EVENTS[$event], 'dates' => $dates, 'month' => $month, 'place' => $place, 'placeLabel' => self::label($place)]);
     }
 
@@ -119,6 +126,10 @@ class JyotishController extends Controller
         }
         if ($list && ! empty($d['religion'])) {
             $list = $list->where('religion', $d['religion'])->values();
+        }
+
+        if ($list !== null) {
+            app(ToolHistory::class)->lookup('festivals', ['year' => $year, 'religion' => $d['religion'] ?? null, 'place' => self::label($place)], 'Festivals '.$year.' · '.$place->name, $request, 'web', ToolHistory::visitorFor($request));
         }
 
         return view('public.festivals', ['list' => $list, 'year' => $year, 'religion' => $d['religion'] ?? null, 'place' => $place, 'placeLabel' => self::label($place)]);

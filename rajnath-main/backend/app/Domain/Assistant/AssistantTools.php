@@ -2,6 +2,7 @@
 
 namespace App\Domain\Assistant;
 
+use App\Domain\Analytics\ToolHistory;
 use App\Domain\Astro\Muhurat;
 use App\Domain\Astro\PanchangService;
 use App\Domain\Astro\ToolDisplay;
@@ -350,6 +351,7 @@ class AssistantTools
             return ['error' => 'The calculation service is busy. Ask them to try the calculator page.'];
         }
         $this->actions[] = ['label' => 'Open '.Tools::TOOLS[$slug][0], 'url' => route('tools.show', $slug), 'type' => 'page', 'page' => 'tools'];
+        app(ToolHistory::class)->record($slug, $v->validated() + ['via' => 'AI assistant'], $r, request(), $this->channel === 'app' ? 'app' : 'web', ToolHistory::visitorFor(request()));
         $display = ToolDisplay::for($r);
 
         return ['calculator' => Tools::TOOLS[$slug][0], 'result' => Str::limit(json_encode($display, JSON_UNESCAPED_UNICODE), 7000)];

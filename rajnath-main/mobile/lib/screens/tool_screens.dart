@@ -139,6 +139,7 @@ class _ToolScreenState extends State<ToolScreen> {
   DateTime? _dob;
   DateTime _month = DateTime(DateTime.now().year, DateTime.now().month);
   Map<String, dynamic>? _display;
+  String? _pdfUrl;
   Map<String, String> _errors = {};
   bool _busy = false;
 
@@ -198,10 +199,13 @@ class _ToolScreenState extends State<ToolScreen> {
   Future<void> _calc() async {
     final body = _body();
     if (body == null) return;
-    setState(() { _busy = true; _display = null; });
+    setState(() { _busy = true; _display = null; _pdfUrl = null; });
     try {
       final r = unwrap(await widget.state.api.post('/tools/$_slug', body));
-      setState(() => _display = (r['display'] as Map?)?.cast<String, dynamic>() ?? const {'sections': []});
+      setState(() {
+        _display = (r['display'] as Map?)?.cast<String, dynamic>() ?? const {'sections': []};
+        _pdfUrl = r['pdf_url'] is String ? r['pdf_url'] as String : null;
+      });
     } on ApiException catch (e) {
       const shown = {'name', 'partner', 'plate', 'year', 'birth_date', 'a_name', 'b_name'};
       setState(() => _errors = {...e.fieldErrors, if (!e.fieldErrors.keys.any(shown.contains)) '_': e.message});
@@ -271,6 +275,14 @@ class _ToolScreenState extends State<ToolScreen> {
             const SizedBox(height: 16),
             FilledButton(onPressed: _busy ? null : _calc, child: Text(_busy ? 'Calculating…' : 'Calculate')),
           ],
+          if (_display != null && _pdfUrl != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: OutlinedButton.icon(onPressed: () => openExternal(context, _pdfUrl!), icon: const Icon(Icons.picture_as_pdf_outlined), label: const Text('Download PDF')),
+              ),
+            ),
           if (_display != null) ToolDisplayView(_display!),
           if (_display != null)
             AskAiCard(state: widget.state, page: 'tool:$_slug', label: 'Explain my result with AI', question: 'Explain my ${widget.tool['title']} result in simple words. What does it mean for me?',

@@ -3,8 +3,11 @@
 namespace Tests\Feature\Astro;
 
 use App\Domain\Analytics\ToolPdf;
+use App\Domain\Analytics\Tracker;
 use App\Domain\Astro\Engine;
+use App\Domain\Privacy\PrivacyService;
 use App\Models\ToolRun;
+use App\Models\User;
 use App\Support\Pdf\Pdf;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -106,5 +109,61 @@ class ToolHistoryAndPdfTest extends TestCase
         $owner = $this->makeStaff(['owner']);
         $this->asStaff($owner)->get(route('admin.pdf-templates.preview', 'kundli'))->assertOk()->assertSee('Sample Person');
         $this->asStaff($owner)->get(route('admin.pdf-templates.edit', 'kundli'))->assertOk()->assertSee('Planet positions');
+    }
+
+    public function test_panchang_muhurat_festivals_calendar_and_gochar_are_in_the_history(): void
+    {
+        if (! app(Engine::class)->available()) {
+            $this->markTestSkipped('engine not built');
+        }
+        $this->syncRbac();
+        DB::table('places')->insert(['id' => 1260086, 'name' => 'Patna', 'ascii_name' => 'Patna', 'admin1' => 'Bihar', 'country_code' => 'IN', 'country' => 'India', 'lat' => 25.59408, 'lng' => 85.13563, 'tz_name' => 'Asia/Kolkata', 'population' => 1]);
+        $web = $this->withHeaders(['User-Agent' => self::UA]);
+        $vid = $web->get('/panchang?date=2026-11-20&place_id=1260086')->assertOk()->getCookie(Tracker::VISITOR_COOKIE)->getValue();
+        $web->withCookie(Tracker::VISITOR_COOKIE, $vid)->get('/panchang?date=2026-11-20&place_id=1260086')->assertOk();   // a refresh counts once
+        $web->get('/muhurat/vivah?month=2026-12')->assertOk();
+        $web->get('/festivals?year=2026')->assertOk();
+        $web->get('/calendar?month=2026-12')->assertOk();
+        $web->get('/gochar/saturn')->assertOk();
+        $this->flushHeaders()->withHeaders(['User-Agent' => 'Dart/3.9 (dart:io)', 'X-App-Install' => 'abcdef12-3456-7890-abcd-ef1234567890'])
+            ->getJson('/api/v1/panchang?date=2026-11-21&place_id=1260086')->assertOk();
+
+        $this->assertSame(['calendar' => 1, 'festivals' => 1, 'gochar' => 1, 'muhurat' => 1, 'panchang' => 2],
+            DB::table('tool_runs')->selectRaw('tool, count(*) as n')->groupBy('tool')->orderBy('tool')->pluck('n', 'tool')->map(fn ($n) => (int) $n)->all());
+        $this->assertSame('app', DB::table('tool_runs')->where('tool', 'panchang')->orderByDesc('id')->value('channel'));
+        $page = $this->asStaff($this->makeStaff(['owner']))->get(route('admin.analytics.tools'))->assertOk()
+            ->assertSee('Panchang 2026-11-20 · Patna')->assertSee('Shubh muhurat')->assertSee('Vrat calendar')->assertSee('Free pages viewed');
+        $run = ToolRun::where('tool', 'muhurat')->first();
+        $this->asStaff($this->makeStaff(['owner']))->get(route('admin.analytics.tools.show', $run))->assertOk()->assertDontSee('Download PDF');
+    }
+
+    public function test_resubmit_counts_once_head_is_not_a_download_and_account_deletion_removes_history(): void
+    {
+        $this->syncRbac();
+        $this->fakePrinter();
+        $customer = User::factory()->create();
+        $form = ['name' => 'Ravi Kumar', 'birth_date' => '1990-05-14'];
+        $first = $this->actingAs($customer)->withHeaders(['User-Agent' => self::UA])->post(route('tools.compute', 'numerology'), $form)->assertOk();
+        $vid = $first->getCookie(Tracker::VISITOR_COOKIE)->getValue();
+        $this->withCookie(Tracker::VISITOR_COOKIE, $vid)->post(route('tools.compute', 'numerology'), $form)->assertOk();
+        $this->assertSame(1, ToolRun::count());
+
+        $this->call('HEAD', $first->viewData('pdfUrl'))->assertOk();
+        $this->assertSame(0, ToolRun::first()->pdf_downloads);
+        $this->get($first->viewData('pdfUrl'))->assertOk();
+        $this->assertSame(1, ToolRun::first()->pdf_downloads);
+
+        $export = app(PrivacyService::class)->export($customer);
+        $this->assertSame('Ravi Kumar', $export['calculator_history'][0]['details']['name']);
+        app(PrivacyService::class)->delete($customer->fresh());
+        $this->assertSame(0, ToolRun::count());
+        $this->assertSame(0, DB::table('analytics_events')->where('user_id', $customer->id)->count());
+    }
+
+    public function test_bad_gochar_query_is_rejected_not_a_server_error(): void
+    {
+        $this->get('/gochar/saturn?month[]=1')->assertStatus(302);
+        $this->getJson('/api/v1/gochar/saturn?month[]=1')->assertStatus(422);
+        $this->assertSame(0, ToolRun::count());
     }
 }

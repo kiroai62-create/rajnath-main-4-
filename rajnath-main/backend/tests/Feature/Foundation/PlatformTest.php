@@ -18,6 +18,8 @@ class PlatformTest extends TestCase
             ->assertSee('Jyotirveda Vigyan Sansthan')
             ->assertSee('participation in the Sri Lanka Sacred Astrological Symposium')
             ->assertDontSee('Source code (AGPL-3.0)');   // hidden unless switched on in Admin › Settings
+        // the award photos on the home page are the two upright award photos, in equal frames
+        $this->get('/')->assertSee('professor-award-2026/03-thumb', false)->assertSee('award-malaysia-2025', false)->assertDontSee('awards-wall-wide', false);
     }
 
     public function test_security_headers_are_set(): void
