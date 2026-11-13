@@ -7,6 +7,8 @@ use App\Http\Middleware\EnsureStaff;
 use App\Http\Middleware\RequireStepUp;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
+use App\Http\Middleware\TrackAppRequest;
+use App\Http\Middleware\TrackVisit;
 use App\Http\Middleware\TranslatePage;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -24,8 +26,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->prepend(AssignRequestId::class);
         $middleware->append(SecurityHeaders::class);
-        $middleware->web(append: [SetLocale::class, TranslatePage::class]);
-        $middleware->api(append: [SetLocale::class]);
+        $middleware->web(append: [SetLocale::class, TranslatePage::class, TrackVisit::class]);
+        $middleware->api(append: [SetLocale::class, TrackAppRequest::class]);
         $middleware->alias([
             'staff' => EnsureStaff::class,
             'step.up' => RequireStepUp::class,

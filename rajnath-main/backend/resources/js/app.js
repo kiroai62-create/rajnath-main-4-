@@ -1,6 +1,16 @@
 // CSP-safe Alpine build: no eval. Behaviour lives in named components, not inline expressions.
 import Alpine from '@alpinejs/csp';
 
+// Puja request form: show "other puja" and the home address only when they apply.
+Alpine.data('pujaForm', () => ({
+    puja: '', mode: 'online',
+    init() { this.puja = this.$el.dataset.puja || ''; this.mode = this.$el.dataset.mode || 'online'; },
+    setPuja(e) { this.puja = e.target.value; },
+    setMode(e) { this.mode = e.target.value; },
+    get isOther() { return this.puja === 'other'; },
+    get isHome() { return this.mode === 'home'; },
+}));
+
 // Show/hide panel (mobile nav). Escape closes it and returns focus to the button (x-ref="opener").
 Alpine.data('disclosure', () => ({
     open: false,
@@ -529,3 +539,34 @@ if (aiBox) {
         ta.insertAdjacentElement('afterend', bar);
     });
 }
+
+// First-party analytics (Admin › Analytics): which links and buttons are clicked, and how long a
+// page is actually read. Sent with navigator.sendBeacon; nothing is sent from the control centre,
+// and only the link's path is kept (never its query string).
+(() => {
+    const token = document.querySelector('meta[name="csrf-token"]')?.content;
+    if (!token || !navigator.sendBeacon || /^\/(admin|staff)(\/|$)/.test(location.pathname)) { return; }
+    const send = (data) => {
+        const f = new FormData();
+        f.append('_token', token);
+        f.append('path', location.pathname);
+        Object.entries(data).forEach(([k, v]) => { if (v !== null && v !== undefined) { f.append(k, String(v).slice(0, 300)); } });
+        navigator.sendBeacon('/analytics/event', f);
+    };
+    document.addEventListener('click', (e) => {
+        const el = e.target.closest('a[href], button, [data-track]');
+        if (!el || el.closest('[data-no-track]')) { return; }
+        const label = (el.dataset.track || el.getAttribute('aria-label') || el.textContent || '').replace(/\s+/g, ' ').trim();
+        if (el.matches('input[type=password], [type=password]')) { return; }
+        send({ type: 'click', label: label.slice(0, 200), target: el.tagName === 'A' ? el.getAttribute('href') : (el.form ? el.form.getAttribute('action') : null) });
+    }, { capture: true, passive: true });
+    let visibleSince = document.visibilityState === 'visible' ? Date.now() : null;
+    let total = 0;
+    let sent = false;
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+            if (visibleSince) { total += Date.now() - visibleSince; visibleSince = null; }
+            if (!sent && total > 1000) { sent = true; send({ type: 'engage', seconds: Math.min(3600, Math.round(total / 1000)) }); }
+        } else { visibleSince = Date.now(); sent = false; total = 0; }
+    });
+})();

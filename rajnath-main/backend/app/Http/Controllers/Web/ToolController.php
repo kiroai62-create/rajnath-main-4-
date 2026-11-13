@@ -2,10 +2,15 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Domain\Analytics\ToolHistory;
+use App\Domain\Analytics\ToolPdf;
 use App\Domain\Astro\PanchangService;
 use App\Domain\Astro\Tools;
 use App\Http\Controllers\Controller;
+use App\Models\ToolRun;
+use App\Support\Pdf\Documents;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use RuntimeException;
@@ -25,7 +30,7 @@ class ToolController extends Controller
     }
 
     /** POST so birth details never appear in URLs, logs or browser history. */
-    public function compute(Request $request, string $slug, Tools $tools): View
+    public function compute(Request $request, string $slug, Tools $tools, ToolHistory $history, ToolPdf $pdf): View
     {
         abort_unless(isset(Tools::TOOLS[$slug]), 404);
         $in = $request->validate(Tools::rules(Tools::TOOLS[$slug][1]));
@@ -36,8 +41,28 @@ class ToolController extends Controller
 
             return view('public.tools.show', ['slug' => $slug, 'tool' => Tools::TOOLS[$slug], 'result' => null, 'engineError' => true]);
         }
+        $run = $history->record($slug, $in, $result, $request, 'web', $request->attributes->get('analytics.ids')['visitor'] ?? null);
 
-        return view('public.tools.show', ['slug' => $slug, 'tool' => Tools::TOOLS[$slug], 'result' => $result]);
+        return view('public.tools.show', ['slug' => $slug, 'tool' => Tools::TOOLS[$slug], 'result' => $result,
+            'pdfUrl' => $run && $pdf->template($slug)['enabled'] ? ToolHistory::pdfUrl($run) : null]);
+    }
+
+    /** PDF of a saved calculation (signed link from the result page or the app). */
+    public function pdf(Request $request, string $slug, ToolRun $run, ToolHistory $history, ToolPdf $pdf, Documents $docs): Response
+    {
+        abort_unless($run->tool === $slug && isset(Tools::TOOLS[$slug]) && $pdf->template($slug)['enabled'], 404);
+        try {
+            $result = $history->result($run);
+        } catch (RuntimeException $e) {
+            report($e);
+            abort(503, 'The calculation service is unavailable right now. Please try again in a few minutes.');
+        }
+        $response = $docs->download($pdf->html($slug, $result, $run->ref), $slug.'-'.substr($run->ref, -8).'.pdf');
+        if ($response->isSuccessful()) {
+            $history->countPdf($run, $request, $request->query('via') === 'app' ? 'app' : 'web');
+        }
+
+        return $response;
     }
 
     public function panchang(Request $request, PanchangService $panchang): View

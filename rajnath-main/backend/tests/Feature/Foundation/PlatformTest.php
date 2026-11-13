@@ -17,7 +17,7 @@ class PlatformTest extends TestCase
             ->assertSee('Astro Rajnath Jha')
             ->assertSee('Jyotirveda Vigyan Sansthan')
             ->assertSee('participation in the Sri Lanka Sacred Astrological Symposium')
-            ->assertSee('Source code (AGPL-3.0)');
+            ->assertDontSee('Source code (AGPL-3.0)');   // hidden unless switched on in Admin › Settings
     }
 
     public function test_security_headers_are_set(): void

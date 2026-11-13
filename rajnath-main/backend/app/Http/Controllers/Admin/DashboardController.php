@@ -33,6 +33,8 @@ class DashboardController extends Controller
                 $seeMoney ? ['Paid orders, last 30 days', DB::table('orders')->whereIn('status', $paid)->where('paid_at', '>=', $since)->count(), 'count', 'admin.finance.index'] : null,
                 $u->can('bookings.view') ? ['Consultations, next 7 days', DB::table('bookings')->where('status', 'confirmed')->whereBetween('start_utc', [now(), now()->addDays(7)])->count(), 'count', 'admin.ops.bookings'] : null,
                 $u->can('customers.view') ? ['New customers, last 30 days', User::where('kind', User::KIND_CUSTOMER)->where('created_at', '>=', $since)->count(), 'count', 'admin.customers.index'] : null,
+                $u->can('analytics.view') ? ['Website visitors, last 30 days', DB::table('analytics_events')->where('type', 'pageview')->where('occurred_at', '>=', $since)->distinct()->count('visitor'), 'count', 'admin.analytics.website'] : null,
+                $u->can('analytics.view') ? ['Kundlis & calculators, last 30 days', DB::table('tool_runs')->where('created_at', '>=', $since)->count(), 'count', 'admin.analytics.tools'] : null,
                 ['Average rating', $reviews->summary()['average'], 'rating', $u->can('content.review') ? 'admin.reviews.index' : null],
             ])),
             'series' => $series,

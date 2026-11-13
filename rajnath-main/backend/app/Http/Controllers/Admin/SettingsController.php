@@ -71,6 +71,10 @@ class SettingsController extends Controller
             }
             $week[$day] ??= [];
         }
+        $showSource = $request->boolean('show_source_link');
+        if ((bool) $settings->get('site.show_source_link', false) !== $showSource) {
+            $settings->set('site.show_source_link', $showSource, false, 'site');
+        }
         if ($settings->get('hours.week') !== $week) {
             $settings->set('hours.week', $week, false, 'hours');
         }

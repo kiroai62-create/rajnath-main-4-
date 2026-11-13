@@ -2,6 +2,9 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:uuid/uuid.dart';
+
+import '../util/version.dart';
 
 /// Base URL of the shared backend. Override at build time:
 ///   flutter build apk --dart-define=API_BASE=https://staging.example.com/api/v1
@@ -38,6 +41,10 @@ class ApiClient {
       final t = await token();
       if (t != null) o.headers['Authorization'] = 'Bearer $t';
       if (locale != null) o.headers['Accept-Language'] = locale;
+      // Admin › Analytics › Mobile app: a random id made on this phone (not linked to the person), the app version and platform.
+      o.headers['X-App-Install'] = await installId();
+      o.headers['X-App-Version'] = appVersion;
+      o.headers['X-App-Platform'] = Platform.isIOS ? 'ios' : 'android';
       h.next(o);
     }));
   }
@@ -46,6 +53,23 @@ class ApiClient {
   final FlutterSecureStorage _storage;
   static const _tokenKey = 'arj_token';
   static const _localeKey = 'arj_locale';
+  static const _installKey = 'arj_install';
+  String? _installId;
+
+  /// Random id for this installation, created once and kept in secure storage.
+  Future<String> installId() async {
+    if (_installId != null) return _installId!;
+    try {
+      _installId = await _storage.read(key: _installKey);
+      if (_installId == null) {
+        _installId = const Uuid().v4();
+        await _storage.write(key: _installKey, value: _installId);
+      }
+    } catch (_) {
+      _installId ??= const Uuid().v4();
+    }
+    return _installId!;
+  }
   void Function()? onUnauthorized;
 
   /// App language (e.g. `hi`), sent as `Accept-Language`. Null lets the server decide.

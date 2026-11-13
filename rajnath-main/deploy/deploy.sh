@@ -26,6 +26,8 @@ $DC run --rm app php artisan migrate --force
 $DC run --rm app php artisan db:seed --force   # idempotent safe seed (roles, places, catalogue, Hindi text)
 # Creates the admin (owner, full access) only when there is none yet; prints the sign-in details once.
 $DC run --rm app php artisan arj:ensure-admin
+# Visitor countries for Admin › Analytics (free DB-IP list; a failed download never stops the deploy).
+$DC run --rm app php artisan arj:geoip-import || true
 $DC $PROFILES up -d --remove-orphans
 DOMAIN=$(grep ^DOMAIN= deploy/.env.production | cut -d= -f2)
 for i in $(seq 1 30); do

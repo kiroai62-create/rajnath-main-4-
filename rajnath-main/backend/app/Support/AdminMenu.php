@@ -13,6 +13,11 @@ class AdminMenu
             ['My account', 'admin.account.show', null, 'user'],
             ['User manual', 'admin.manual', null, 'help'],
         ],
+        'Analytics' => [
+            ['Website visitors', 'admin.analytics.website', 'analytics.view', 'chart'],
+            ['Free tools & Kundli', 'admin.analytics.tools', 'analytics.view', 'spark'],
+            ['App usage', 'admin.analytics.app', 'analytics.view', 'devices'],
+        ],
         'Customers' => [
             ['Enquiries', 'admin.enquiries.index', 'bookings.view', 'inbox'],
             ['Puja requests', 'admin.puja-requests.index', 'bookings.view', 'flame'],
@@ -42,7 +47,8 @@ class AdminMenu
             ['About & awards', 'admin.profile.edit', 'content.author', 'award'],
             ['Gallery', 'admin.gallery.index', 'media.manage', 'image'],
             ['Articles', 'admin.blog.index', 'content.author', 'pen'],
-            ['Rashifal', 'admin.ops.horoscopes', 'content.author', 'sun'],
+            ['Rashifal', 'admin.rashifal.live', 'content.author', 'sun'],
+            ['PDF templates', 'admin.pdf-templates.index', 'content.publish', 'doc'],
             ['FAQs', 'admin.faqs.index', 'content.author', 'help'],
             ['Legal pages', 'admin.legal.index', 'legal.manage', 'scale'],
         ],
@@ -70,6 +76,7 @@ class AdminMenu
 
     /** Heroicons-style 24px outline paths. */
     public const ICONS = [
+        'chart' => 'M4 20V10m6 10V4m6 16v-7m4 7H2',
         'home' => 'M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z',
         'inbox' => 'M3 13h5l1.5 3h5L16 13h5M5 5h14l2 8v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6z',
         'calendar' => 'M7 3v3m10-3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z',

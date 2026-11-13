@@ -51,6 +51,8 @@ This repository contains only the files needed to run and rebuild the platform.
    - Languages: visitors choose English (default), Hindi, Bengali, Marathi, Telugu, Tamil, Gujarati, Urdu or Kannada from
      the globe button on every page; press *Translate the whole website now* once the AI key is saved
    - Puja requests: online puja and chadhava are replaced by a request form (`/puja`); the team fixes the date here
+   - Analytics: website visitors (country, device, pages, clicks), free-tool and Kundli history with PDF downloads,
+     and app usage; PDF templates for every calculator; Rashifal shows and edits today's live text per sign
    - Push notifications (Firebase), Calling (LiveKit / Zoom / Google Meet)
 7. **Before going live:** publish the Refund and Shipping policies (Admin › Legal pages), set real stock
    (Admin › Store), and check the office hours (Admin › Bookings).

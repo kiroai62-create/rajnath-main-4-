@@ -43,6 +43,7 @@ Route::prefix('v1')->middleware('throttle:api')->group(function () {
     Route::post('enquiries', [V1\EnquiryApiController::class, 'store'])->middleware('throttle:enquiry');
     Route::get('tools', fn () => response()->json(['data' => collect(Tools::TOOLS)->map(fn ($t, $k) => ['slug' => $k, 'title' => $t[0], 'input' => $t[1], 'kind' => $t[2], 'description' => $t[3]])->values()]));
     Route::post('tools/{slug}', [V1\ToolApiController::class, 'compute'])->middleware('throttle:tools');
+    Route::post('analytics/events', [V1\AppAnalyticsController::class, 'store'])->middleware('throttle:analytics');
     Route::get('panchang', [V1\ToolApiController::class, 'panchang'])->middleware('throttle:tools');
     Route::get('faq', [V1\ContentApiController::class, 'faq']);
     Route::get('site', [V1\ContentApiController::class, 'site']);

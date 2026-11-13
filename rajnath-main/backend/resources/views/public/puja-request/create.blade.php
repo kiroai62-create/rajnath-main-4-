@@ -12,7 +12,7 @@
                 <p class="text-ink-700">{{ __('Puja requests are paused for a few days. Please call or WhatsApp us.') }}</p>
                 <a href="{{ route('contact') }}" class="btn-primary mt-4">{{ __('Contact us') }}</a>
             @else
-            <form method="POST" action="{{ route('puja-request.store') }}" class="space-y-6" novalidate x-data="{ puja: @js(old('puja_type', $selected)), mode: @js(old('mode', 'online')) }">
+            <form method="POST" action="{{ route('puja-request.store') }}" class="space-y-6" novalidate x-data="pujaForm" data-puja="{{ old('puja_type', $selected) }}" data-mode="{{ old('mode', 'online') }}">
                 @csrf
                 {{-- Honeypot field for bots; hidden from people and assistive technology. --}}
                 <div class="hidden" aria-hidden="true"><label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
@@ -21,14 +21,14 @@
                     <legend class="text-lg font-semibold">{{ __('1. Which puja?') }}</legend>
                     <div>
                         <label for="f-puja_type" class="field-label">{{ __('Puja') }}</label>
-                        <select id="f-puja_type" name="puja_type" class="input" x-model="puja" required @error('puja_type') aria-invalid="true" aria-describedby="f-puja_type-error" @enderror>
+                        <select id="f-puja_type" name="puja_type" class="input" @change="setPuja" required @error('puja_type') aria-invalid="true" aria-describedby="f-puja_type-error" @enderror>
                             <option value="">{{ __('Choose a puja') }}</option>
                             @foreach ($types as $t)<option value="{{ $t }}" @selected(old('puja_type', $selected) === $t)>{{ __($t) }}</option>@endforeach
                             <option value="other" @selected(old('puja_type', $selected) === 'other')>{{ __('Other / not sure (write below)') }}</option>
                         </select>
                         @error('puja_type')<p id="f-puja_type-error" class="field-error">{{ $message }}</p>@enderror
                     </div>
-                    <div x-show="puja === 'other'" x-cloak>
+                    <div x-show="isOther" x-cloak>
                         <x-field name="puja_other" :label="__('Name of the puja, or describe what you need')" :value="$other" />
                     </div>
                     <div>
@@ -44,13 +44,13 @@
                         <div class="grid gap-2 sm:grid-cols-2">
                             @foreach (\App\Models\PujaRequest::MODES as $k => $l)
                                 <label class="flex min-h-11 items-center gap-2 rounded-xl border border-ink-200 px-3 text-sm has-[:checked]:border-maroon-600 has-[:checked]:bg-ivory-100">
-                                    <input type="radio" name="mode" value="{{ $k }}" x-model="mode" @checked(old('mode', 'online') === $k) class="size-4 accent-ink-900"> {{ __($l) }}
+                                    <input type="radio" name="mode" value="{{ $k }}" @change="setMode" @checked(old('mode', 'online') === $k) class="size-4 accent-ink-900"> {{ __($l) }}
                                 </label>
                             @endforeach
                         </div>
                         @error('mode')<p class="field-error">{{ $message }}</p>@enderror
                     </div>
-                    <div x-show="mode === 'home'" x-cloak>
+                    <div x-show="isHome" x-cloak>
                         <x-field name="address" :label="__('Address or city for the puja')" autocomplete="street-address" />
                     </div>
                     <div class="grid gap-4 sm:grid-cols-3">

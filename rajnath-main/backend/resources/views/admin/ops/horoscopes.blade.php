@@ -1,5 +1,6 @@
 @php $T = \App\Domain\Content\HoroscopeTypes::class; @endphp
-<x-layouts.admin title="Rashifal">
+<x-layouts.admin title="Rashifal: all entries">
+    <p class="mb-4"><a href="{{ route('admin.rashifal.live') }}" class="btn-outline">← What the website shows today (edit)</a></p>
     <div class="grid gap-6 xl:grid-cols-[1fr_26rem]">
         <section class="min-w-0">
             <div class="table-wrap" role="region" aria-label="Rashifal entries" tabindex="0"><table class="table">

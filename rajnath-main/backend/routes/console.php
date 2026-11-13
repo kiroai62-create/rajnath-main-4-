@@ -23,6 +23,8 @@ Artisan::command('inspire', function () {
 // Payment reconciliation + ledger invariant check (needs `php artisan schedule:work` or cron).
 Schedule::call(fn () => app(Reconciler::class)->run())->everyTenMinutes()->name('payments-reconcile')->withoutOverlapping();
 Schedule::command('queue:prune-failed --hours=720')->daily();
+Schedule::command('arj:analytics-prune')->dailyAt('03:10');
+Schedule::command('arj:geoip-import')->monthlyOn(3, '04:20');
 Schedule::call(fn () => app(PalmReadings::class)->purgeOldPhotos() + ServiceDetails::purgeUnpaid())->dailyAt('03:30')->name('palm-photo-retention');
 Schedule::call(fn () => app(Slots::class)->expireHolds())->everyMinute()->name('booking-holds')->withoutOverlapping();
 Schedule::call(fn () => app(Slots::class)->sendReminders())->everyTenMinutes()->name('booking-reminders')->withoutOverlapping();

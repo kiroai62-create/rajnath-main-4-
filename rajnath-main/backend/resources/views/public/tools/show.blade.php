@@ -30,7 +30,7 @@
                     @if ($input === 'vehicle')<x-field name="plate" label="Vehicle number" placeholder="BR01AB1234" required />@endif
                 @endif
                 <button class="btn-primary w-full">Calculate</button>
-                <p class="text-xs text-ink-600">Details are used only to calculate this result and are not stored.</p>
+                <p class="text-xs text-ink-600">{{ __('Your details are saved securely so you can download this result as a PDF and our team can help you with it. See our') }} <a href="{{ route('privacy') }}">{{ __('Privacy Policy') }}</a>.</p>
             </form>
 
             <section aria-live="polite" aria-labelledby="res-h" class="min-w-0">
@@ -40,6 +40,9 @@
                 @elseif (! $r)
                     <div class="card p-8 text-center text-ink-600">Enter the details and press Calculate.</div>
                 @else
+                    @if (! empty($pdfUrl))
+                        <div class="mb-4 flex justify-end"><a href="{{ $pdfUrl }}" class="btn-outline" data-track="Download PDF: {{ $slug }}" rel="nofollow">{{ __('Download PDF') }}</a></div>
+                    @endif
                     @include('public.tools._result', ['r' => $r])
                     <div class="card mt-6 flex flex-wrap items-center justify-between gap-3 p-5">
                         <p class="text-sm">Want Acharya Ji to read this in detail?</p>

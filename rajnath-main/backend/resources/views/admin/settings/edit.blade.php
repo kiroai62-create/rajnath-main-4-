@@ -22,6 +22,8 @@
                 @endforeach
             </div>
         </fieldset>
+        <label class="flex min-h-10 items-start gap-2 border-t border-ink-200/60 pt-5 text-sm"><input type="checkbox" name="show_source_link" value="1" @checked($values['site.show_source_link'] ?? false) class="mt-1 size-4 accent-ink-900">
+            <span>Show the "Source code (AGPL-3.0)" link in the website footer. <span class="text-ink-600">Off hides it. The Swiss Ephemeris used for Kundli is AGPL-licensed: without this link, keep the source available on request or buy the Swiss Ephemeris professional licence.</span></span></label>
         <p class="text-sm text-ink-600">Biography, awards, stats and home-page text are in <a href="{{ route('admin.profile.edit') }}">About &amp; awards</a>. Photos and videos are in <a href="{{ route('admin.gallery.index') }}">Gallery</a>.</p>
         <div class="flex flex-col gap-3 border-t border-ink-200/60 pt-5 sm:flex-row sm:items-center sm:justify-between">
             <p class="text-xs text-ink-600">Saving requires a fresh password + authenticator confirmation. Changes are audited.</p>

@@ -30,6 +30,25 @@
             'To correct a translation, choose the language under <em>Edit translations</em>, search for the English text, change it and press Save. AI never overwrites a line you edited. Empty a line and save to let AI translate it again.',
             'Untick a language under Settings to hide it from visitors. Personal details (customer names, account pages) are never sent to AI.',
         ]],
+        'analytics' => ['Analytics: visitors, free tools and the app', [
+            '<a href="'.e(route('admin.analytics.website')).'">Website visitors</a>: visitors, visits, page views, time spent, bounce rate, people on the site right now, most viewed pages, where visits start, <strong>what people click</strong>, countries, devices, systems, browsers, languages, other websites sending visitors and campaigns. Choose Today, 7 days, 30 days, 90 days, 12 months or your own dates.',
+            '<a href="'.e(route('admin.analytics.tools')).'">Free tools &amp; Kundli</a>: how many Kundlis, matchings and other calculations were made, by how many people, from the website or the app, and how many <strong>PDFs were downloaded</strong>. Below is the full <strong>history</strong>: name, birth details, result, country and device. Open a row to see the full result, the visitor\'s recent activity, or download the PDF. Export CSV downloads it all.',
+            '<a href="'.e(route('admin.analytics.app')).'">Mobile app</a>: app opens per day, phones using the app, most used features, calculators used in the app, versions, countries and languages. Screens viewed and versions fill in with the next app build.',
+            'Only staff with the "calculator history" permission (owner and administrator) see names and birth details; every view is in the audit log. Birth details are stored encrypted.',
+            'Settings at the bottom of Website visitors: switch counting on or off, respect "Do Not Track", switch the calculator history off, and choose after how many days old data is deleted (default 395).',
+            'Countries come from a free IP list (DB-IP) loaded on each deploy and every month. No visitor IP address is saved or sent to another company.',
+        ]],
+        'pdf' => ['PDF templates', [
+            'Every calculator result has a <strong>Download PDF</strong> button. <a href="'.e(route('admin.pdf-templates.index')).'">PDF templates</a> sets how the PDF looks.',
+            'Edit the <strong>default template</strong> first: title, colour, text under the title, closing box (for example "Book a consultation"), small print, watermark, paper size, and whether to include birth details, Kundli charts and your contact details.',
+            'Open a single calculator to give it its own template, leave out sections, or switch its PDF off. "Use the default template again" removes its own settings.',
+            'Press Preview to see a sample with made-up details, or Download sample PDF.',
+        ]],
+        'rashifal' => ['Rashifal', [
+            '<a href="'.e(route('admin.rashifal.live')).'">Rashifal</a> shows exactly what the website shows today for all 12 signs. Choose the type (Rashifal, Nakshatra, Chinese, Numerology, Tarot), period, topic and language.',
+            'Each sign shows who wrote it (AI, built-in engine or staff). Change the text and press Save: it is live at once, and AI will not replace it. The earlier text is kept in the audit log.',
+            '"All entries &amp; write new" opens the full list, where you can write a Rashifal for a future date and publish drafts.',
+        ]],
         'customers' => ['Customers, enquiries and bookings', [
             '<a href="'.e(route('admin.enquiries.index')).'">Enquiries</a>: messages from the contact and service forms. Call back, then mark Contacted or Closed.',
             '<a href="'.e(route('admin.ops.bookings')).'">Bookings &amp; hours</a>: consultation slots, weekly hours, leave days and booked consultations.',
@@ -51,7 +70,7 @@
         ]],
         'website' => ['Website content', [
             '<a href="'.e(route('admin.website.edit')).'">Website &amp; home page</a>: announcement bar, home page sections and banners.',
-            '<a href="'.e(route('admin.profile.edit')).'">About &amp; awards</a>, <a href="'.e(route('admin.gallery.index')).'">Gallery</a>, <a href="'.e(route('admin.blog.index')).'">Articles</a>, <a href="'.e(route('admin.ops.horoscopes')).'">Rashifal</a> and <a href="'.e(route('admin.faqs.index')).'">FAQs</a> edit the matching public pages.',
+            '<a href="'.e(route('admin.profile.edit')).'">About &amp; awards</a>, <a href="'.e(route('admin.gallery.index')).'">Gallery</a>, <a href="'.e(route('admin.blog.index')).'">Articles</a> <a href="'.e(route('admin.faqs.index')).'">FAQs</a> edit the matching public pages. The footer "Source code" link is switched on or off in Settings.',
             '<a href="'.e(route('admin.app.edit')).'">Mobile app</a> and <a href="'.e(route('admin.broadcast.index')).'">Push messages</a> control the Android app and send notifications.',
             'Under every text box in the admin there is a ✨ AI bar to write, shorten or translate the text.',
         ]],

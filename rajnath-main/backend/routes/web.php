@@ -41,6 +41,8 @@ Route::get('/tools', [Web\ToolController::class, 'index'])->name('tools.index');
 Route::permanentRedirect('/tools/match-making', '/tools/kundli-matching');
 Route::get('/tools/{slug}', [Web\ToolController::class, 'show'])->name('tools.show');
 Route::post('/tools/{slug}', [Web\ToolController::class, 'compute'])->middleware('throttle:tools')->name('tools.compute');
+Route::get('/tools/{slug}/pdf/{run}', [Web\ToolController::class, 'pdf'])->middleware(['signed', 'throttle:tools'])->name('tools.pdf');
+Route::post('/analytics/event', Web\AnalyticsBeaconController::class)->middleware('throttle:analytics')->name('analytics.event');
 Route::get('/panchang', [Web\ToolController::class, 'panchang'])->middleware('throttle:tools')->name('panchang');
 Route::get('/about', [Web\ShowcaseController::class, 'about'])->name('about');
 Route::get('/awards', [Web\ShowcaseController::class, 'awards'])->name('awards');
@@ -288,6 +290,22 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'staff'])->group(fun
         Route::post('rashifal/{id}/decision', 'decideHoroscope')->whereNumber('id')->name('ops.horoscope.decide');
     });
     Route::get('languages', [Admin\LanguageController::class, 'index'])->name('languages.index');
+    Route::controller(Admin\AnalyticsController::class)->prefix('analytics')->name('analytics.')->group(function () {
+        Route::get('/', 'website')->name('website');
+        Route::get('tools', 'tools')->name('tools');
+        Route::get('tools/export', 'exportTools')->name('tools.export');
+        Route::get('tools/{run}', 'toolRun')->name('tools.show');
+        Route::get('tools/{run}/pdf', 'toolRunPdf')->name('tools.pdf');
+        Route::get('app', 'app')->name('app');
+    });
+    Route::controller(Admin\PdfTemplateController::class)->prefix('pdf-templates')->name('pdf-templates.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('{slug}', 'edit')->name('edit');
+        Route::put('{slug}', 'update')->name('update');
+        Route::get('{slug}/preview', 'preview')->name('preview');
+    });
+    Route::get('rashifal/live', [Admin\RashifalController::class, 'live'])->name('rashifal.live');
+    Route::put('rashifal/entries/{id}', [Admin\RashifalController::class, 'update'])->whereNumber('id')->name('rashifal.update');
     Route::post('languages/translate', [Admin\LanguageController::class, 'translate'])->middleware('throttle:provider-test')->name('languages.translate');
     Route::post('languages/scan', [Admin\LanguageController::class, 'scan'])->middleware('throttle:provider-test')->name('languages.scan');
     Route::put('languages/lines/{id}', [Admin\LanguageController::class, 'saveLine'])->whereNumber('id')->name('languages.line');
@@ -352,6 +370,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'staff'])->group(fun
         Route::put('team/{user}/status', [Admin\TeamController::class, 'setStatus'])->name('team.status');
         Route::put('settings', [Admin\SettingsController::class, 'update'])->name('settings.update');
         Route::put('languages', [Admin\LanguageController::class, 'update'])->name('languages.update');
+        Route::put('analytics/settings', [Admin\AnalyticsController::class, 'saveSettings'])->name('analytics.settings');
         Route::post('legal/{kind}/{locale}/publish', [Admin\LegalController::class, 'publish'])->name('legal.publish');
         Route::post('legal/{kind}/{locale}/unpublish', [Admin\LegalController::class, 'unpublish'])->name('legal.unpublish');
         Route::put('providers/mail', [Admin\ProvidersController::class, 'updateMail'])->name('providers.mail');

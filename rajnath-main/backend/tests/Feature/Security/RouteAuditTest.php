@@ -72,7 +72,8 @@ class RouteAuditTest extends TestCase
             'api/v1/store/products', 'api/v1/store/products/{slug}', 'api/v1/practitioners', 'api/v1/horoscopes', 'api/v1/horoscopes/types',
             'api/v1/gochar', 'api/v1/gochar/{planet}', 'api/v1/muhurat', 'api/v1/muhurat/{event}', 'api/v1/festivals',
             'api/v1/calendar', 'api/v1/rashi/{sign}', 'api/v1/navagraha', 'api/v1/faq', 'api/v1/site',
-            'api/v1/assistant/chat']; // the assistant checks an optional customer token itself
+            'api/v1/assistant/chat', // the assistant checks an optional customer token itself
+            'api/v1/analytics/events']; // anonymous app screen views (throttled)
         foreach (Route::getRoutes() as $r) {
             if (! str_starts_with($r->uri(), 'api/') || in_array($r->uri(), $open, true)) {
                 continue;
@@ -87,7 +88,7 @@ class RouteAuditTest extends TestCase
     {
         foreach (['account/sign-in', 'account/verify', 'api/v1/auth/otp/start', 'api/v1/auth/otp/verify', 'enquiries', 'checkout', 'gems/buy', 'staff/login', 'staff/mfa', 'tools/{slug}',
             'assistant/chat', 'api/v1/assistant/chat', 'api/v1/checkout/service', 'api/v1/checkout/booking', 'api/v1/checkout/product', 'api/v1/checkout/recharge', 'api/v1/palmistry/{ref}/photos',
-            'checkout/details/{variant}', 'api/v1/orders/{ref}/pay'] as $uri) {
+            'checkout/details/{variant}', 'api/v1/orders/{ref}/pay', 'analytics/event', 'api/v1/analytics/events', 'puja'] as $uri) {
             $route = collect(Route::getRoutes())->first(fn ($r) => $r->uri() === $uri && array_intersect($r->methods(), ['POST']));
             $this->assertNotNull($route, $uri);
             $this->assertMatchesRegularExpression('/throttle/', implode(' ', $route->gatherMiddleware()), $uri);

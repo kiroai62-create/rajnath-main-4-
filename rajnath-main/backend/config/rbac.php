@@ -33,6 +33,8 @@ return [
         'support.view', 'support.handle', 'privacy.handle', 'privacy.approve',
         // AI
         'assistant.knowledge',
+        // Analytics: numbers, and the calculator history with names and birth details
+        'analytics.view', 'tools.history',
     ],
 
     'roles' => [
@@ -44,7 +46,7 @@ return [
             'bookings.view', 'bookings.manage', 'practitioners.view', 'practitioners.review',
             'practitioners.manage', 'reports.review', 'suppliers.manage', 'support.view',
             'support.handle', 'privacy.handle', 'assistant.knowledge', 'finance.view',
-            'commission.propose', 'refunds.request',
+            'commission.propose', 'refunds.request', 'analytics.view', 'tools.history',
         ],
         'finance' => [
             'finance.view', 'refunds.request', 'refunds.approve', 'payouts.propose', 'payouts.approve',
@@ -56,7 +58,7 @@ return [
         ],
         'content_author' => ['content.author', 'media.manage', 'catalogue.view'],
         'content_reviewer' => ['content.author', 'content.review', 'media.manage', 'catalogue.view'],
-        'content_publisher' => ['content.author', 'content.review', 'content.publish', 'media.manage', 'catalogue.view'],
+        'content_publisher' => ['content.author', 'content.review', 'content.publish', 'media.manage', 'catalogue.view', 'analytics.view'],
         'fulfilment' => ['reports.fulfil', 'puja.fulfil', 'bookings.view', 'catalogue.view'],
         'practitioner' => [], // practitioner abilities are scoped to their own records by policies
     ],

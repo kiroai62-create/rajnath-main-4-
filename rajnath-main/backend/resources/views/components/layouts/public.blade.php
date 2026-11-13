@@ -38,9 +38,10 @@
     <header class="sticky top-0 z-40 border-b border-gold-200/60 bg-white/90 shadow-[0_6px_24px_-18px_rgb(27_20_70/0.5)] backdrop-blur-md pt-[env(safe-area-inset-top)]" x-data="disclosure">
         <div aria-hidden="true" class="h-0.5 bg-gradient-to-r from-maroon-600 via-gold-500 to-saffron-500"></div>
         <div class="container-page flex h-[4.25rem] items-center justify-between gap-4">
-            <a href="{{ route('home') }}" class="flex min-w-0 items-center gap-2.5 no-underline">
+            {{-- The logo never shrinks when the menu and buttons need room (xl:shrink-0). --}}
+            <a href="{{ route('home') }}" class="flex min-w-0 items-center gap-2.5 no-underline xl:shrink-0">
                 <img src="/images/brand/logo-mark.svg" alt="" width="52" height="52" class="size-13 shrink-0 transition duration-700 hover:rotate-[30deg] xl:hidden">
-                <img src="/images/brand/logo-full.svg" alt="{{ $site('brand.name') }}" width="198" height="51" class="hidden h-[3.4rem] w-auto xl:block">
+                <img src="/images/brand/logo-full.svg" alt="{{ $site('brand.name') }}" width="198" height="51" class="hidden h-[3.4rem] w-auto max-w-none shrink-0 xl:block">
                 <span class="min-w-0 leading-tight xl:sr-only"><span class="text-maroon-grad block truncate text-base font-bold">{{ $site('brand.name') }}</span>
                     <span class="hidden whitespace-nowrap text-[0.7rem] uppercase tracking-[0.14em] text-gold-700 sm:block">{{ __('Jyotish · Vastu · Puja') }}</span></span>
             </a>
@@ -51,8 +52,7 @@
                     <x-dropdown id="lang-menu" width="w-56" :label="__('Language').': '.($langNames[$curLang] ?? $curLang)" button-class="btn-ghost gap-1.5 px-2.5 text-sm">
                         <x-slot:trigger>
                             <x-icon name="globe" />
-                            <span class="hidden 2xl:inline" translate="no">{{ $langNames[$curLang] ?? $curLang }}</span>
-                            <span class="font-semibold uppercase 2xl:hidden" translate="no">{{ $curLang }}</span>
+                            <span class="font-semibold uppercase" translate="no">{{ $curLang }}</span>
                         </x-slot:trigger>
                         <p class="menu-label">{{ __('Language') }}</p>
                         @foreach ($langs as $l)
@@ -233,7 +233,7 @@
                     @php $legalDocs = app(\App\Domain\Legal\LegalDocuments::class); @endphp
                     @if ($legalDocs->isPublished('refunds'))<li><a href="{{ route('legal.refunds') }}">{{ __('Cancellation and refund policy') }}</a></li>@endif
                     @if ($legalDocs->isPublished('shipping'))<li><a href="{{ route('legal.shipping') }}">{{ __('Shipping and delivery policy') }}</a></li>@endif
-                    <li><a href="{{ $site('source.repository_url') }}" rel="noopener">{{ __('Source code (AGPL-3.0)') }}</a></li>
+                    @if ($site('site.show_source_link'))<li><a href="{{ $site('source.repository_url') }}" rel="noopener">{{ __('Source code (AGPL-3.0)') }}</a></li>@endif
                 </ul>
             </div>
         </div>

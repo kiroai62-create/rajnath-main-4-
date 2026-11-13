@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'api/api_client.dart';
+import 'api/app_analytics.dart';
 import 'push/push_service.dart';
 import 'screens/account_screens.dart';
 import 'screens/activity_screens.dart';
@@ -45,8 +46,14 @@ class ArjApp extends StatelessWidget {
   final GlobalKey<ScaffoldMessengerState>? messengerKey;
 
   @override
-  Widget build(BuildContext context) => MaterialApp(
+  Widget build(BuildContext context) {
+    AppAnalytics.instance.api ??= state.api;
+    return _app();
+  }
+
+  Widget _app() => MaterialApp(
         navigatorKey: navigatorKey,
+        navigatorObservers: [ScreenObserver()],
         scaffoldMessengerKey: messengerKey,
         title: 'Astro Rajnath Jha',
         debugShowCheckedModeBanner: false,
